@@ -24,10 +24,34 @@ router.route('/:id').get((req, res) => {
   });
 
 router.route('/:id').delete((req, res) => {
-    Embedding.findById(req.params.id)
-      .then(() => res.json('Embedding deleted.'))
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
+
+  try {
+    Embedding.deleteOne({_id: req.params.id}, (err, item) => {
+      if(err){
+        res.json(err);
+      }
+      else {
+        // res.json(item);
+        res.json('Embedding deleted.')
+      }
+    })
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+  
+      return res.status(400).json({
+        success: false,
+        error: messages
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: 'Server Error ' + err
+      });
+    }
+  }
+
+});
 
 router.route('/update/:id').post((req, res) => {
     Embedding.findById(req.params.id)

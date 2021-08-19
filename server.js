@@ -26,12 +26,12 @@ const userRouter = require('./routes/user')
 const videoRouter = require('./routes/video')
 const viewRouter = require('./routes/view')
 
-app.use('/company', companyRouter);
-app.use('/embedding', embeddingRouter);
-app.use('/emotion', emotionRouter);
-app.use('/user', userRouter);
-app.use('/video', videoRouter);
-app.use('/view', viewRouter);
+app.use('/companies', companyRouter);
+app.use('/embeddings', embeddingRouter);
+app.use('/emotions', emotionRouter);
+app.use('/users', userRouter);
+app.use('/videos', videoRouter);
+app.use('/views', viewRouter);
 
 
 app.listen(port, () => {
