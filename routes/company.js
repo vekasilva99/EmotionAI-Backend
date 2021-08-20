@@ -7,7 +7,7 @@ router.route('/').get((req, res) => {
 
     Company.find()
     .then(companies => {
-      res.status.apply(200).json({
+      res.status(200).json({
         success: true,
         data: companies
       })
