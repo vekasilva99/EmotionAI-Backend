@@ -33,7 +33,9 @@ app.use('/users', userRouter);
 app.use('/videos', videoRouter);
 app.use('/views', viewRouter);
 
-
+app.get('/', (req, res) => {
+  res.send('Emotion AI API')
+})
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);
 });
