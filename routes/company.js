@@ -176,7 +176,8 @@ router.route('/:id').delete((req, res) => {
 
 });
 
-
+// update a specific company
+// VERIFICAR QUE SEA ADMIN O LA MISMA COMPAÑIA
 router.route('/update/:id').post((req, res) => {
 
   Company.findById(req.params.id)
@@ -201,14 +202,124 @@ router.route('/update/:id').post((req, res) => {
         });
 
         newCompany.save()
-        .then(() => res.json('Company updated!'))
-        .catch(err => res.status(400).json('Error: ' + err));
+        .then((data) => {
+          res.status(200).json({
+            success: true,
+            data: data,
+            message: 'Company has been updated!'
+          })
+        })
+        .catch(err => {
+          res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
 
       } else {
-
         res.status(404).json({
           success: false,
-          message: 'This company is not registered'
+          message: `This company is not registered, so it can't be updated.`
+        });
+        
+      }
+
+      
+    })
+    .catch(err => res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    }));
+});
+
+// accept or reject a specific company
+// VERIFICAR QUE SEA ADMIN
+router.route('/accept/:id/:accepted').post((req, res) => {
+
+  Company.findById(req.params.id)
+    .then((item) => {
+
+      if(Boolean(item)){
+
+        // we only change the accepted value according to what we recieved.
+        const newCompany = new Company({
+          email: item.email, 
+          full_name: item.full_name,
+          active: item.active,
+          accepted: req.params.accepted,
+          password: item.password,
+          mainImg: item.mainImg,
+        });
+
+        newCompany.save()
+        .then((data) => {
+          res.status(200).json({
+            success: true,
+            data: data,
+            message: 'Company has been updated!'
+          })
+        })
+        .catch(err => {
+          res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
+
+      } else {
+        res.status(404).json({
+          success: false,
+          message: `This company is not registered, so it can't be accepted/rejected.`
+        });
+        
+      }
+
+      
+    })
+    .catch(err => res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    }));
+});
+
+// Active/inactive a specific company
+// VERIFICAR QUE SEA ADMIN
+router.route('/active/:id/:active').post((req, res) => {
+
+  Company.findById(req.params.id)
+    .then((item) => {
+
+      if(Boolean(item)){
+
+        // we only change the active value according to what we recieved.
+        const newCompany = new Company({
+          email: item.email, 
+          full_name: item.full_name,
+          active: req.params.active,
+          accepted: item.accepted,
+          password: item.password,
+          mainImg: item.mainImg,
+        });
+
+        newCompany.save()
+        .then((data) => {
+          res.status(200).json({
+            success: true,
+            data: data,
+            message: 'Company has been updated!'
+          })
+        })
+        .catch(err => {
+          res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
+
+      } else {
+        res.status(404).json({
+          success: false,
+          message: `This company is not registered, so it can't be accepted/rejected.`
         });
         
       }
