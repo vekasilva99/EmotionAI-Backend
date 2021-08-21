@@ -1,11 +1,19 @@
 const router = require('express').Router();
 const e = require('express');
 let Company = require('../models/company.model');
+const LIMIT = 20;
+const PAGE = 0;
 
-// get all the companies
+// get companies
 router.route('/').get((req, res) => {
 
-    Company.find()
+  const page = parseInt(req.query.page, 10) || PAGE;
+  const limit = parseInt(req.query.limit, 10) || LIMIT;
+  const keyword = req.query.keyword;
+
+  // If keyword, the filter.
+  if(keyword){
+    Company.paginate({"full_name": {$regex: keyword, $options: 'i'}}, {limit, page})
     .then(companies => {
       res.status(200).json({
         success: true,
@@ -17,7 +25,22 @@ router.route('/').get((req, res) => {
         success: false,
         message: 'Server error: ' + err
       })
-    });
+    })
+  } else {
+    Company.paginate({}, {limit, page})
+    .then(companies => {
+      res.status(200).json({
+        success: true,
+        data: companies
+      })
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })
+    })
+  }
 
 });
 

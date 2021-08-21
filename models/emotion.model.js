@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Schema = mongoose.Schema;
 
@@ -19,6 +20,8 @@ const emotionSchema = new Schema({
     },
 
 });
+
+emotionSchema.plugin(mongoosePaginate);
 
 const Emotion = mongoose.model('Emotion', emotionSchema);
 
