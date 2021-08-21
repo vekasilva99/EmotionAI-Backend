@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const e = require('express');
 let Company = require('../models/company.model');
+const bcrypt = require('bcryptjs');
 const LIMIT = 20;
 const PAGE = 0;
 
@@ -45,7 +46,7 @@ router.route('/').get((req, res) => {
 });
 
 // add a new company
-router.route('/add').post((req, res) => {
+router.post('/register', (req, res) => {
 
   // Check if email already exist.
   Company.findOne({email:req.body.email}, (err, item) => {
@@ -69,7 +70,7 @@ router.route('/add').post((req, res) => {
       } else {
 
         // Check if company name already exist
-        Company.findOne({full_name: req.body.full_name}, (err2, item2) => {
+        Company.findOne({full_name: req.body.full_name}, async (err2, item2) => {
 
           if(err2){
 
@@ -95,11 +96,15 @@ router.route('/add').post((req, res) => {
                 full_name,
                 mainImg
               } = req.body
+
+              // hasing password
+              const salt = await bcrypt.genSalt(10);
+              const hashPassword = await bcrypt.hash(password, salt);
             
               // when we add a company, it will be activate and waiting for acceptance
               const newCompany = new Company({
                 email, 
-                password,
+                password: hashPassword,
                 full_name,
                 active: true,
                 accepted: false,
@@ -110,7 +115,7 @@ router.route('/add').post((req, res) => {
                 .then((data) => {
                   res.status(200).json({
                     success: true,
-                    data: data
+                    message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`
                   })
                 })
                 .catch(err => {
