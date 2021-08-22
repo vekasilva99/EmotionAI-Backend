@@ -16,13 +16,13 @@ router.route('/').get((req, res) => {
   if(keyword){
     Company.paginate({"full_name": {$regex: keyword, $options: 'i'}}, {limit, page})
     .then(companies => {
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: companies
       })
     })
     .catch(err => {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Server error: ' + err
       })
@@ -30,13 +30,13 @@ router.route('/').get((req, res) => {
   } else {
     Company.paginate({}, {limit, page})
     .then(companies => {
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: companies
       })
     })
     .catch(err => {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Server error: ' + err
       })
@@ -53,7 +53,7 @@ router.post('/register', (req, res) => {
 
     if(err){
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Server error: ' + err
       });
@@ -62,7 +62,7 @@ router.post('/register', (req, res) => {
 
       if(Boolean(item)){
 
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: 'This email already exists.'
         });
@@ -74,7 +74,7 @@ router.post('/register', (req, res) => {
 
           if(err2){
 
-            res.status(500).json({
+            return res.status(500).json({
               success: false,
               message: 'Server error: ' + err2
             });
@@ -83,7 +83,7 @@ router.post('/register', (req, res) => {
 
             if(Boolean(item2)){
 
-              res.status(400).json({
+              return res.status(400).json({
                 success: false,
                 message: 'This company is already registered'
               });
@@ -113,13 +113,13 @@ router.post('/register', (req, res) => {
 
               newCompany.save()
                 .then((data) => {
-                  res.status(200).json({
+                  return res.status(200).json({
                     success: true,
                     message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`
                   })
                 })
                 .catch(err => {
-                  res.status(500).json({
+                  return res.status(500).json({
                     success: false,
                     message: 'Server error: ' + err
                   });
@@ -145,14 +145,14 @@ router.route('/:id').get((req, res) => {
 
     if(Boolean(item)){
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: item
       })
 
     } else{
 
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: 'This company is not registered'
       })
@@ -161,7 +161,7 @@ router.route('/:id').get((req, res) => {
   })
   .catch(err => {
     
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Server error: ' + err
     })
@@ -176,7 +176,7 @@ router.route('/:id').delete((req, res) => {
   Company.deleteOne({_id: req.params.id}, (err, item) => {
     if(err){
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Server error: ' + err
       });
@@ -231,21 +231,21 @@ router.route('/update/:id').post((req, res) => {
 
         newCompany.save()
         .then((data) => {
-          res.status(200).json({
+          return res.status(200).json({
             success: true,
             data: data,
             message: 'Company has been updated!'
           })
         })
         .catch(err => {
-          res.status(500).json({
+          return res.status(500).json({
             success: false,
             message: 'Server error: ' + err
           })
         });
 
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           success: false,
           message: `This company is not registered, so it can't be updated.`
         });
@@ -254,10 +254,11 @@ router.route('/update/:id').post((req, res) => {
 
       
     })
-    .catch(err => res.status(500).json({
+    .catch(err => {
+      return res.status(500).json({
       success: false,
       message: 'Server error: ' + err
-    }));
+    })});
 });
 
 // accept or reject a specific company
@@ -281,21 +282,21 @@ router.route('/accept/:id/:accepted').post((req, res) => {
 
         newCompany.save()
         .then((data) => {
-          res.status(200).json({
+          return res.status(200).json({
             success: true,
             data: data,
             message: 'Company has been updated!'
           })
         })
         .catch(err => {
-          res.status(500).json({
+          return res.status(500).json({
             success: false,
             message: 'Server error: ' + err
           })
         });
 
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           success: false,
           message: `This company is not registered, so it can't be accepted/rejected.`
         });
@@ -304,10 +305,11 @@ router.route('/accept/:id/:accepted').post((req, res) => {
 
       
     })
-    .catch(err => res.status(500).json({
+    .catch(err => {
+      return res.status(500).json({
       success: false,
       message: 'Server error: ' + err
-    }));
+    })});
 });
 
 // Active/inactive a specific company
@@ -331,21 +333,21 @@ router.route('/active/:id/:active').post((req, res) => {
 
         newCompany.save()
         .then((data) => {
-          res.status(200).json({
+          return res.status(200).json({
             success: true,
             data: data,
             message: 'Company has been updated!'
           })
         })
         .catch(err => {
-          res.status(500).json({
+          return res.status(500).json({
             success: false,
             message: 'Server error: ' + err
           })
         });
 
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           success: false,
           message: `This company is not registered, so it can't be accepted/rejected.`
         });
@@ -354,10 +356,11 @@ router.route('/active/:id/:active').post((req, res) => {
 
       
     })
-    .catch(err => res.status(500).json({
+    .catch(err => {
+      return res.status(500).json({
       success: false,
       message: 'Server error: ' + err
-    }));
+    })});
 });
 
 
