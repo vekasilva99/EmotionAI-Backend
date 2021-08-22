@@ -209,7 +209,7 @@ router.route('/:id').delete((req, res) => {
 router.route('/update/:id').post((req, res) => {
 
   Company.findById(req.params.id)
-    .then((item) => {
+    .then( async (item) => {
 
       if(Boolean(item)){
 
@@ -218,22 +218,51 @@ router.route('/update/:id').post((req, res) => {
           full_name,
           mainImg
         } = req.body
-      
-        // when we add a company, it will be activate and waiting for acceptance
-        const newCompany = new Company({
-          email, 
-          full_name,
-          active: item.active,
-          accepted: item.accepted,
-          password: item.password,
-          mainImg
-        });
 
-        newCompany.save()
+        // Check if there are other company with that email (apart from itself)
+        const companyEmail = await Company.findOne({email: email});
+        if(Boolean(companyEmail) && String(companyEmail._id)!==String(item._id)){
+          return res.status(400).json({
+            success: false,
+            message: 'There is already another company registered with that email.',
+          })
+        }
+
+        // Check if there are other company with that full_name (apart from itself)
+        const companyName = await Company.findOne({full_name: full_name})
+        if(Boolean(companyName) && String(companyName._id)!==String(item._id)){
+          return res.status(400).json({
+            success: false,
+            message: 'There is already another company registered with that name.'
+          })
+        }
+
+        // when we update a company, we won't change its password, accepted nor active values.
+        Company.findByIdAndUpdate(
+          {_id: req.params.id}, 
+          {
+            email, 
+            full_name,
+            active: item.active,
+            accepted: item.accepted,
+            password: item.password,
+            mainImg,
+  
+          }, 
+          {
+            returnOriginal: false, 
+            useFindAndModify: false 
+        })
         .then((data) => {
           return res.status(200).json({
             success: true,
-            data: data,
+            data: {
+              email: data.email,
+              full_name: data.full_name,
+              active: data.active,
+              accepted: data.accepted,
+              mainImg: data.mainImg,
+            },
             message: 'Company has been updated!'
           })
         })
