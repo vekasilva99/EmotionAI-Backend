@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Schema = mongoose.Schema;
 
@@ -18,6 +19,8 @@ const embeddingSchema = new Schema({
     },
 
 });
+
+embeddingSchema.plugin(mongoosePaginate);
 
 const Embedding = mongoose.model('Embedding', embeddingSchema);
 
