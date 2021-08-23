@@ -1,9 +1,11 @@
 const router = require('express').Router();
 const e = require('express');
 let Company = require('../models/company.model');
+let User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const LIMIT = 20;
 const PAGE = 0;
+const {createToken, verifyToken} = require('../utils/services');
 
 // get companies
 router.route('/').get((req, res) => {
@@ -147,7 +149,13 @@ router.route('/:id').get((req, res) => {
 
       return res.status(200).json({
         success: true,
-        data: item
+        data: {
+          email: item.email,
+          accepted: item.accepted,
+          active: item.active,
+          mainImg: item.mainImg,
+          full_name: item.full_name
+        }
       })
 
     } else{
@@ -205,191 +213,251 @@ router.route('/:id').delete((req, res) => {
 });
 
 // update a specific company
-// VERIFICAR QUE SEA ADMIN O LA MISMA COMPAÑIA
-router.route('/update/:id').post((req, res) => {
+// Only the same company can edit its own information (or an admin)
+router.route('/update/:id').post( verifyToken, async (req, res) => {
 
-  Company.findById(req.params.id)
-    .then( async (item) => {
+  const userToken = await User.findById(req.payload.sub);
 
-      if(Boolean(item)){
+  if( String(req.params.id)==String(req.payload.sub) || ( Boolean(userToken) && userToken.isAdmin) ){
+    Company.findById(req.params.id)
+      .then( async (item) => {
 
-        const {
-          email, 
-          full_name,
-          mainImg
-        } = req.body
+        if(Boolean(item)){
 
-        // Check if there are other company with that email (apart from itself)
-        const companyEmail = await Company.findOne({email: email});
-        if(Boolean(companyEmail) && String(companyEmail._id)!==String(item._id)){
-          return res.status(400).json({
-            success: false,
-            message: 'There is already another company registered with that email.',
-          })
-        }
-
-        // Check if there are other company with that full_name (apart from itself)
-        const companyName = await Company.findOne({full_name: full_name})
-        if(Boolean(companyName) && String(companyName._id)!==String(item._id)){
-          return res.status(400).json({
-            success: false,
-            message: 'There is already another company registered with that name.'
-          })
-        }
-
-        // when we update a company, we won't change its password, accepted nor active values.
-        Company.findByIdAndUpdate(
-          {_id: req.params.id}, 
-          {
+          const {
             email, 
             full_name,
-            active: item.active,
-            accepted: item.accepted,
-            password: item.password,
-            mainImg,
-  
-          }, 
-          {
-            returnOriginal: false, 
-            useFindAndModify: false 
-        })
-        .then((data) => {
-          return res.status(200).json({
-            success: true,
-            data: {
-              email: data.email,
-              full_name: data.full_name,
-              active: data.active,
-              accepted: data.accepted,
-              mainImg: data.mainImg,
-            },
-            message: 'Company has been updated!'
+            mainImg
+          } = req.body
+
+          // Check if there are other company with that email (apart from itself)
+          const companyEmail = await Company.findOne({email: email});
+          if(Boolean(companyEmail) && String(companyEmail._id)!==String(item._id)){
+            return res.status(400).json({
+              success: false,
+              message: 'There is already another company registered with that email.',
+            })
+          }
+
+          // Check if there are other company with that full_name (apart from itself)
+          const companyName = await Company.findOne({full_name: full_name})
+          if(Boolean(companyName) && String(companyName._id)!==String(item._id)){
+            return res.status(400).json({
+              success: false,
+              message: 'There is already another company registered with that name.'
+            })
+          }
+
+          // when we update a company, we won't change its password, accepted nor active values.
+          Company.findByIdAndUpdate(
+            {_id: req.params.id}, 
+            {
+              email, 
+              full_name,
+              active: item.active,
+              accepted: item.accepted,
+              password: item.password,
+              mainImg,
+    
+            }, 
+            {
+              returnOriginal: false, 
+              useFindAndModify: false 
+            }
+          )
+          .then((data) => {
+            return res.status(200).json({
+              success: true,
+              data: {
+                email: data.email,
+                full_name: data.full_name,
+                active: data.active,
+                accepted: data.accepted,
+                mainImg: data.mainImg,
+              },
+              message: 'Company has been updated!'
+            })
           })
-        })
-        .catch(err => {
-          return res.status(500).json({
+          .catch(err => {
+            return res.status(500).json({
+              success: false,
+              message: 'Server error: ' + err
+            })
+          });
+
+        } else {
+          return res.status(404).json({
             success: false,
-            message: 'Server error: ' + err
-          })
-        });
+            message: `This company is not registered, so it can't be updated.`
+          });
+          
+        }
 
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: `This company is not registered, so it can't be updated.`
-        });
         
-      }
+      })
+      .catch(err => {
+        return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })});
 
-      
-    })
-    .catch(err => {
-      return res.status(500).json({
+  } else {
+    return res.status(401).json({
       success: false,
-      message: 'Server error: ' + err
-    })});
+      message: `You don't have authorization to perform this action.`
+    })
+  }
 });
 
 // accept or reject a specific company
-// VERIFICAR QUE SEA ADMIN
-router.route('/accept/:id/:accepted').post((req, res) => {
+// Only an admin can accept/reject companies
+router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
 
-  Company.findById(req.params.id)
-    .then((item) => {
+  const userToken = await User.findById(req.payload.sub);
 
-      if(Boolean(item)){
+  if(Boolean(userToken) && userToken.isAdmin){
 
-        // we only change the accepted value according to what we recieved.
-        const newCompany = new Company({
-          email: item.email, 
-          full_name: item.full_name,
-          active: item.active,
-          accepted: req.params.accepted,
-          password: item.password,
-          mainImg: item.mainImg,
-        });
+    Company.findById(req.params.id)
+      .then((item) => {
 
-        newCompany.save()
-        .then((data) => {
-          return res.status(200).json({
-            success: true,
-            data: data,
-            message: 'Company has been updated!'
+        if(Boolean(item)){
+
+          // we only change the accepted value according to what we recieved.
+          Company.findByIdAndUpdate(
+            {_id: req.params.id}, 
+            {
+              email: item.email, 
+              full_name: item.full_name,
+              active: item.active,
+              password: item.password,
+              mainImg: item.mainImg,
+              accepted: req.params.accepted,
+            }, 
+            {
+              returnOriginal: false, 
+              useFindAndModify: false 
+            }
+          )
+          .then((data) => {
+            return res.status(200).json({
+              success: true,
+              data: {
+                email: data.email,
+                full_name: data.full_name,
+                active: data.active,
+                accepted: data.accepted,
+                mainImg: data.mainImg,
+              },
+              message: 'Company has been updated!'
+            })
           })
-        })
-        .catch(err => {
-          return res.status(500).json({
+          .catch(err => {
+            return res.status(500).json({
+              success: false,
+              message: 'Server error: ' + err
+            })
+          });
+
+
+        } else {
+          return res.status(404).json({
             success: false,
-            message: 'Server error: ' + err
-          })
-        });
+            message: `This company is not registered, so it can't be accepted/rejected.`
+          });
+          
+        }
 
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: `This company is not registered, so it can't be accepted/rejected.`
-        });
         
-      }
+      })
+      .catch(err => {
+        return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })});
 
-      
-    })
-    .catch(err => {
-      return res.status(500).json({
+  } else {
+
+    return res.status(401).json({
       success: false,
-      message: 'Server error: ' + err
-    })});
+      message: `You don't have authorization to perform this action.`
+    })
+
+  }
 });
 
 // Active/inactive a specific company
-// VERIFICAR QUE SEA ADMIN
-router.route('/active/:id/:active').post((req, res) => {
+// Only a company can make itself active or inactive (or an admin)
+router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
 
-  Company.findById(req.params.id)
-    .then((item) => {
+  const userToken = await User.findById(req.payload.sub);
 
-      if(Boolean(item)){
+  if( String(req.params.id)==String(req.payload.sub) || ( Boolean(userToken) && userToken.isAdmin) ){
+    
+  
+    Company.findById(req.params.id)
+      .then((item) => {
 
-        // we only change the active value according to what we recieved.
-        const newCompany = new Company({
-          email: item.email, 
-          full_name: item.full_name,
-          active: req.params.active,
-          accepted: item.accepted,
-          password: item.password,
-          mainImg: item.mainImg,
-        });
+        if(Boolean(item)){
 
-        newCompany.save()
-        .then((data) => {
-          return res.status(200).json({
-            success: true,
-            data: data,
-            message: 'Company has been updated!'
+          // we only change the accepted value according to what we recieved.
+          Company.findByIdAndUpdate(
+            {_id: req.params.id}, 
+            {
+              email: item.email, 
+              full_name: item.full_name,
+              active: req.params.active,
+              password: item.password,
+              mainImg: item.mainImg,
+              accepted: item.accepted,
+            }, 
+            {
+              returnOriginal: false, 
+              useFindAndModify: false 
+            }
+          )
+          .then((data) => {
+            return res.status(200).json({
+              success: true,
+              data: {
+                email: data.email,
+                full_name: data.full_name,
+                active: data.active,
+                accepted: data.accepted,
+                mainImg: data.mainImg,
+              },
+              message: 'Company has been updated!'
+            })
           })
-        })
-        .catch(err => {
-          return res.status(500).json({
+          .catch(err => {
+            return res.status(500).json({
+              success: false,
+              message: 'Server error: ' + err
+            })
+          });
+
+        } else {
+          return res.status(404).json({
             success: false,
-            message: 'Server error: ' + err
-          })
-        });
+            message: `This company is not registered, so it can't be activated/inactivated.`
+          });
+          
+        }
 
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: `This company is not registered, so it can't be accepted/rejected.`
-        });
         
-      }
+      })
+      .catch(err => {
 
-      
-    })
-    .catch(err => {
-      return res.status(500).json({
-      success: false,
-      message: 'Server error: ' + err
-    })});
+        return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })});
+
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: `You don't have authorization to perform this action.`
+      })
+    }
 });
 
 

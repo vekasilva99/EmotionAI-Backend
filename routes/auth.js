@@ -3,7 +3,7 @@ const e = require('express');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
-const createToken = require('../utils/services');
+const {createToken, verifyToken} = require('../utils/services');
 
 // log in of a company
 router.post('/company', (req, res) => {
