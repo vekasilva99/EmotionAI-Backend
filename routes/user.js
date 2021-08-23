@@ -3,8 +3,7 @@ let User = require('../models/user.model');
 const e = require('express');
 const bcrypt = require('bcryptjs');
 const {createToken, verifyToken} = require('../utils/services');
-const LIMIT = 20;
-const PAGE = 0;
+const {LIMIT, PAGE} = require('./../utils/pagination.config')
 
 // get users
 router.route('/').get((req, res) => {

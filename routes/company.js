@@ -3,9 +3,8 @@ const e = require('express');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
-const LIMIT = 20;
-const PAGE = 0;
-const {createToken, verifyToken} = require('../utils/services');
+const {LIMIT, PAGE} = require('./../utils/pagination.config')
+const {verifyToken} = require('../utils/services');
 
 // get companies
 router.route('/').get((req, res) => {
