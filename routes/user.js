@@ -173,7 +173,7 @@ router.route('/:id').get((req, res) => {
   
 });
 
-// delete a specific User
+// delete a specific user (we won't use this in the web page)
 router.route('/:id').delete((req, res) => {
 
   User.deleteOne({_id: req.params.id}, (err, item) => {

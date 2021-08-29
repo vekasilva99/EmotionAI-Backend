@@ -177,7 +177,7 @@ router.route('/:id').get((req, res) => {
   
 });
 
-// delete a specific company
+// delete a specific company (we won't use this in the web page)
 router.route('/:id').delete((req, res) => {
 
   Company.deleteOne({_id: req.params.id}, (err, item) => {

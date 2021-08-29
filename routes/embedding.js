@@ -1,69 +1,223 @@
 const router = require('express').Router();
 let Embedding = require('../models/embedding.model');
+let Company = require('../models/company.model');
+let User = require('../models/user.model');
+const {LIMIT, PAGE} = require('./../utils/pagination.config')
+const {verifyToken} = require('../utils/services');
 
-router.route('/').get((req, res) => {
-    Embedding.find()
-    .then(embeddings => res.json(embeddings))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
+// Get embeddings
+// Only companies and Admins can access to this information
+router.route('/').get(verifyToken, async (req, res) => {
 
-router.route('/add').post((req, res) => {
-  const {emotionID, embedding,img} = req.body
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
 
-  const newEmbedding = new Embedding({emotionID, embedding,img});
+  if( Boolean(companyToken) || ( Boolean(userToken) && userToken.isAdmin) ){
 
-  newEmbedding.save()
-    .then(() => res.json('Embedding added!'))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
+    const page = parseInt(req.query.page, 10) || PAGE;
+    const limit = parseInt(req.query.limit, 10) || LIMIT;
 
-router.route('/:id').get((req, res) => {
-    Embedding.findById(req.params.id)
-    .then(embedding => res.json(embedding))
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
-
-router.route('/:id').delete((req, res) => {
-
-  try {
-    Embedding.deleteOne({_id: req.params.id}, (err, item) => {
-      if(err){
-        res.json(err);
-      }
-      else {
-        // res.json(item);
-        res.json('Embedding deleted.')
-      }
+    Embedding.paginate({}, {limit, page})
+    .then(embeddings => {
+      return res.status(200).json({
+        success: true,
+        data: embeddings
+      })
     })
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(val => val.message);
-  
-      return res.status(400).json({
-        success: false,
-        error: messages
-      });
-    } else {
+    .catch(err => {
       return res.status(500).json({
         success: false,
-        error: 'Server Error ' + err
+        message: 'Server error: ' + err
+      })
+    })
+
+  }else{
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    })
+  }
+  
+});
+
+// Add new embedding
+router.route('/add').post((req, res) => {
+
+  const {
+    emotionID, 
+    embedding,
+    img
+  } = req.body
+
+  const newEmbedding = new Embedding({
+    emotionID, 
+    embedding,
+    img
+  });
+
+  newEmbedding.save()
+  .then((data) => {
+    return res.status(200).json({
+      success: true,
+      message: `The embedding has been added.`
+    })
+  })
+  .catch(err => {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    });
+  });
+});
+
+// Get a specific embedding
+// Only companies and Admins can access to this information
+router.route('/:id').get(verifyToken, async (req, res) => {
+
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
+  
+  if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
+
+    Embedding.findById(req.params.id)
+    .then(embedding => {
+
+      if(Boolean(embedding)){
+
+        return res.status(200).json({
+          success: true,
+          data: embedding
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This embedding does not exist.'
+        })
+
+      }
+    })
+    .catch(err => {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })
+    });
+
+  } else {
+
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    })
+
+  }
+});
+
+// Delete specific embedding (we won't use this in the web page)
+router.route('/:id').delete((req, res) => {
+
+  Embedding.deleteOne({_id: req.params.id}, (err, item) => {
+    if(err){
+
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
       });
+
+    } else {
+
+      // Check if we found the id and deleted the item
+      if(item.deletedCount==1){
+
+        return res.status(200).json({
+          success: true,
+          message: 'Embedding deleted'
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This embedding does not exist'
+        });
+      }
+      
     }
+  })
+
+  
+
+});
+
+// Update a specific embedding
+// Only companies and Admins can access to this information
+router.route('/update/:id').post(verifyToken, async (req, res) => {
+
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
+  
+  if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
+
+    Embedding.findById(req.params.id)
+    .then( item => {
+
+      if(Boolean(item)){
+
+        const {
+          emotionID, 
+          embedding,
+          img
+        } = req.body
+  
+        Embedding.findByIdAndUpdate(
+          {_id: req.params.id}, 
+          {
+            emotionID, 
+            embedding,
+            img
+  
+          }, 
+          {
+            returnOriginal: false, 
+            useFindAndModify: false 
+          }
+        )
+        .then((data) => {
+          return res.status(200).json({
+            success: true,
+            data: data,
+            message: 'Embedding has been updated!'
+          })
+        })
+        .catch(err => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This embedding does not exist'
+        });
+
+      }
+
+    })
+
+  } else {
+
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+
   }
 
 });
 
-router.route('/update/:id').post((req, res) => {
-    Embedding.findById(req.params.id)
-      .then(embedding => {
-        embedding.emotionID = req.body.emotionID;
-        embedding.embedding = req.body.embedding;
-        embedding.img = req.body.img;
-  
-        embedding.save()
-          .then(() => res.json('Embedding updated!'))
-          .catch(err => res.status(400).json('Error: ' + err));
-      })
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
 module.exports = router;
