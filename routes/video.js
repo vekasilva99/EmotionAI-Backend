@@ -2,7 +2,7 @@ const router = require('express').Router();
 let Video = require('../models/video.model');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
-const {LIMIT, PAGE} = require('./../utils/pagination.config')
+const {LIMIT, PAGE} = require('./../utils/pagination.config');
 const {verifyToken} = require('../utils/services');
 
 // get videos

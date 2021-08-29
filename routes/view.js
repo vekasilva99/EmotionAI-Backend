@@ -1,74 +1,262 @@
 const router = require('express').Router();
 let View = require('../models/view.model');
+let Company = require('../models/company.model');
+let User = require('../models/user.model');
+const { LIMIT, PAGE } = require('./../utils/pagination.config');
+const { verifyToken } = require('../utils/services');
 
-router.route('/').get((req, res) => {
-    View.find()
-    .then(views => res.json(views))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
+// get views
+// only admins and companies can access to this information
+router.route('/').get(verifyToken, async (req, res) => {
 
-router.route('/add').post((req, res) => {
-  const {videoID,time,embedding,attention,age,gender,country} = req.body
-
-  const newView = new View({videoID,time,embedding,attention,age,gender,country});
-
-  newView.save()
-    .then(() => res.json('View added!'))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
-
-router.route('/:id').get((req, res) => {
-  View.findById(req.params.id)
-  .then(view => res.json(view))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
-
-router.route('/:id').delete((req, res) => {
-
-  try {
-    View.deleteOne({_id: req.params.id}, (err, item) => {
-      if(err){
-        res.json(err);
-      }
-      else {
-        // res.json(item);
-        res.json('View deleted.')
-      }
-    })
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(val => val.message);
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
   
-      return res.status(400).json({
-        success: false,
-        error: messages
-      });
+  if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
+
+    const page = parseInt(req.query.page, 10) || PAGE;
+    const limit = parseInt(req.query.limit, 10) || LIMIT;
+    // const keyword = req.query.keyword;
+    const videoID = req.query.videoID
+
+    // If videoID, the filter.
+    if(videoID){
+      View.paginate({"videoID": {$regex: videoID}}, {limit, page})
+      .then(items => {
+        return res.status(200).json({
+          success: true,
+          data: items
+        })
+      })
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        })
+      })
     } else {
-      return res.status(500).json({
-        success: false,
-        error: 'Server Error ' + err
-      });
+      Video.paginate({}, {limit, page})
+      .then(items => {
+        return res.status(200).json({
+          success: true,
+          data: items
+        })
+      })
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        })
+      })
     }
+
+  } else {
+
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+
   }
 
 });
 
-router.route('/update/:id').post((req, res) => {
-  View.findById(req.params.id)
-    .then(view => {
-      view.videoID = req.body.videoID;
-      view.time = req.body.time;
-      view.embedding = req.body.embedding;
-      view.attention = req.body.attention;
-      view.age = req.body.age;
-      view.gender = req.body.gender;
-      view.country = req.body.country;
+// add view
+router.route('/add').post((req, res) => {
 
-      View.save()
-        .then(() => res.json('View updated!'))
-        .catch(err => res.status(400).json('Error: ' + err));
+  const {
+    videoID,
+    time,
+    embedding,
+    attention,
+    age,
+    gender,
+    country
+  } = req.body
+
+  const newView = new View({
+    videoID,
+    time,
+    embedding,
+    attention,
+    age,
+    gender,
+    country
+  });
+
+  newView.save()
+  .then((data) => {
+    return res.status(200).json({
+      success: true,
+      message: `The view has been successfully added.`
+    })
+  })
+  .catch(err => {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    });
+  });
+
+});
+
+// get a specific view
+// only admins and companies can access to this information
+router.route('/:id').get(verifyToken, async (req, res) => {
+
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
+  
+  if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
+
+    View.findById(req.params.id)
+    .then(item => {
+
+      if(Boolean(item)){
+
+        return res.status(200).json({
+          success: true,
+          data: item
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This view does not exist.'
+        })
+
+      }
+    })
+    .catch(err => {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
       })
-    .catch(err => res.status(400).json('Error: ' + err));
+    });
+
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+  };
+
+});
+
+// Delete specific emotion (we won't use this in the web page)
+router.route('/:id').delete((req, res) => {
+
+  View.deleteOne({_id: req.params.id}, (err, item) => {
+    if(err){
+
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      });
+
+    } else {
+
+      // Check if we found the id and deleted the item
+      if(item.deletedCount==1){
+
+        return res.status(200).json({
+          success: true,
+          message: 'View deleted.'
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This view does not exist.'
+        });
+      }
+      
+    }
+  });
+
+});
+
+// get a specific view
+// only admins and companies can access to this information
+router.route('/update/:id').post(verifyToken, async (req, res) => {
+
+  const userToken = await User.findById(req.payload.sub);
+  const companyToken = await Company.findById(req.payload.sub);
+  
+  if( (Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken)){
+
+    View.findById(req.params.id)
+    .then( item => {
+
+      if(Boolean(item)){
+
+        const {
+          videoID, 
+          time,
+          embedding,
+          attention,
+          age,
+          gender,
+          country
+        } = req.body
+  
+        View.findByIdAndUpdate(
+          {_id: req.params.id}, 
+          {
+            videoID, 
+            time,
+            embedding,
+            attention,
+            age,
+            gender,
+            country
+          }, 
+          {
+            returnOriginal: false, 
+            useFindAndModify: false 
+          }
+        )
+        .then((data) => {
+          return res.status(200).json({
+            success: true,
+            data: data,
+            message: 'View has been updated!'
+          })
+        })
+        .catch(err => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
+
+      } else {
+
+        return res.status(404).json({
+          success: false,
+          message: 'This view does not exist.'
+        });
+
+      }
+
+    })
+    .catch( err => {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      });
+    });
+
+  } else {
+
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+
+  }
 });
 
 
