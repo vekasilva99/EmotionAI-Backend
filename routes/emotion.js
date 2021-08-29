@@ -6,7 +6,7 @@ const {LIMIT, PAGE} = require('./../utils/pagination.config')
 const {verifyToken} = require('../utils/services');
 
 // get emotions
-// Only admins and emotions can access to this information
+// Only admins and companies can access to this information
 router.route('/').get(verifyToken, async (req, res) => {
 
   const userToken = await User.findById(req.payload.sub);
@@ -16,11 +16,11 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     const page = parseInt(req.query.page, 10) || PAGE;
     const limit = parseInt(req.query.limit, 10) || LIMIT;
-    const companyId = req.query.companyId;
+    const companyID = req.query.companyID;
 
     // If companyId, the filter.
-    if(companyId){
-      Emotion.paginate({"companyID": {$regex: companyId}}, {limit, page})
+    if(companyID){
+      Emotion.paginate({"companyID": {$regex: companyID}}, {limit, page})
       .then(emotions => {
         return res.status(200).json({
           success: true,
@@ -69,7 +69,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
     // we must validate, that that company does not have another emotion called like this one.
 
-    Emotion.find({'companyId': req.body.companyID})
+    Emotion.find({'companyID': req.body.companyID})
     .then( items => {
 
       const array = items.find( item => item.name==req.body.name);
@@ -208,7 +208,7 @@ router.route('/:id').delete((req, res) => {
       }
       
     }
-  })
+  });
 
 });
 
@@ -272,7 +272,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
         success: false,
         message: 'Server error: ' + err
       });
-    })
+    });
 
   } else {
 

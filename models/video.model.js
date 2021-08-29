@@ -18,7 +18,7 @@ const videoSchema = new Schema({
         ref: 'Company', 
         required: true,
     },
-    // El link del video en YouTube.
+    // El link del video en YouTube / O el link que nosotros guardamos.
     link: {
         type: String,
     },
@@ -33,11 +33,6 @@ const videoSchema = new Schema({
     publishDate: {
         type: Date,
     },
-    // Para guardar nosotros mismos el video.
-    file: {
-        type: String,
-    }
-
 
 });
 
