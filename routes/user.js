@@ -425,5 +425,71 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
     }
 });
 
+// Change password
+// Only the same user can change its own password
+router.post('/changepassword/:id', verifyToken, async (req, res) => {
+
+  const user = await User.findById(req.payload.sub)
+
+  if(Boolean(user) && ( String(req.payload.sub) == String(req.params.id))){
+
+    // We don't need to check if the user exists because we already checked that with the token and we have a restriction that the ids has to be the same.
+    // We must check if the old password matchs...
+    const {
+      password,
+      old_password
+    } = req.body;
+
+    // Validate password
+    const validPassword = await bcrypt.compare(old_password, user.password);
+    if(!validPassword){
+      return res.status(404).json({
+        success: false,
+        message: 'The old password is incorrect.'
+      });
+    }else{
+      // We proceed to update the password.
+      // hasing password
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(password, salt);
+
+      User.findByIdAndUpdate(
+        {_id: req.params.id}, 
+        {
+          email: user.email, 
+          full_name: user.full_name,
+          isAdmin: user.isAdmin,
+          password: hashPassword,
+          country: user.country,
+          gender: user.gender,
+          birthdate: user.birthdate,
+          active: user.active,
+        }, 
+        {
+          returnOriginal: false, 
+          useFindAndModify: false 
+        }
+      ).then( data => {
+        return res.status(200).json({
+          success: true,
+          message: `The password has been successfully updated.`
+        });
+      })
+      .catch( err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        });
+      });
+    }
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+  };
+  
+});
+
 
 module.exports = router;

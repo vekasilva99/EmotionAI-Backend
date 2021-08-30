@@ -538,8 +538,72 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
       return res.status(401).json({
         success: false,
         message: `You don't have authorization to perform this action.`
-      })
+      });
     }
+});
+
+// Change password
+// Only the same company can change its own password
+router.post('/changepassword/:id', verifyToken, async (req, res) => {
+
+  const companyToken = await Company.findById(req.payload.sub)
+
+  if(Boolean(companyToken) && ( String(req.payload.sub) == String(req.params.id))){
+
+    // We don't need to check if the company exists because we already checked that with the token and we have a restriction that the ids has to be the same.
+    // We must check if the old password matchs...
+    const {
+      password,
+      old_password
+    } = req.body;
+
+    // Validate password
+    const validPassword = await bcrypt.compare(old_password, companyToken.password);
+    if(!validPassword){
+      return res.status(404).json({
+        success: false,
+        message: 'The old password is incorrect.'
+      });
+    }else{
+      // We proceed to update the password.
+      // hasing password
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(password, salt);
+
+      Company.findByIdAndUpdate(
+        {_id: req.params.id}, 
+        {
+          email: companyToken.email, 
+          full_name: companyToken.full_name,
+          active: companyToken.active,
+          password: hashPassword,
+          mainImg: companyToken.mainImg,
+          accepted: companyToken.accepted,
+        }, 
+        {
+          returnOriginal: false, 
+          useFindAndModify: false 
+        }
+      ).then( data => {
+        return res.status(200).json({
+          success: true,
+          message: `The password has been successfully updated.`
+        });
+      })
+      .catch( err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        });
+      });
+    }
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: `You don't have authorization to perform this action.`
+    });
+  };
+  
 });
 
 
