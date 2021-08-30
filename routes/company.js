@@ -1,10 +1,12 @@
 const router = require('express').Router();
 const e = require('express');
+const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
-const bcrypt = require('bcryptjs');
-const {LIMIT, PAGE} = require('./../utils/pagination.config')
-const {verifyToken} = require('../utils/services');
+const { LIMIT, PAGE } = require('./../utils/pagination.config')
+const { verifyToken } = require('../utils/services');
+const {acceptance_of_a_company, active_a_company} = require('../utils/mail_templates');
 
 // get companies
 router.route('/').get((req, res) => {
@@ -114,10 +116,12 @@ router.post('/register', (req, res) => {
 
               newCompany.save()
                 .then((data) => {
+
                   return res.status(200).json({
                     success: true,
                     message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`
-                  })
+                  });
+
                 })
                 .catch(err => {
                   return res.status(500).json({
@@ -321,6 +325,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
 
         if(Boolean(item)){
 
+          const acceptedValue = req.params.accepted=='true'?true:false;
           // we only change the accepted value according to what we recieved.
           Company.findByIdAndUpdate(
             {_id: req.params.id}, 
@@ -330,7 +335,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
               active: item.active,
               password: item.password,
               mainImg: item.mainImg,
-              accepted: req.params.accepted,
+              accepted: acceptedValue,
             }, 
             {
               returnOriginal: false, 
@@ -338,17 +343,56 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
             }
           )
           .then((data) => {
-            return res.status(200).json({
-              success: true,
-              data: {
-                email: data.email,
-                full_name: data.full_name,
-                active: data.active,
-                accepted: data.accepted,
-                mainImg: data.mainImg,
-              },
-              message: 'Company has been updated!'
+
+            let output = acceptance_of_a_company(data, acceptedValue);
+
+            // create reusable transporter object using the default SMTP transport
+            let transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                  user: process.env.MAIL_DIRECTION,
+                  pass: process.env.MAIL_PASS,
+              }
+            });
+
+            // send mail with defined transport object
+            let mailOptions = {
+              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              to: data.email, // list of receivers
+              subject: acceptedValue?`Your company has been accepted!`:`Your company has been rejected.`, // Subject line
+              text: acceptedValue?`Your company has been accepted!`:`We are extremely sorry, but your company has been rejected...`, // plain text body
+              html: output, // html body
+            }
+
+            transporter.sendMail(mailOptions)
+            .then( () => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  accepted: data.accepted,
+                  mainImg: data.mainImg,
+                },
+                message: 'Company has been updated and the mail was sent!'
+              });
             })
+            .catch( err => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  accepted: data.accepted,
+                  mainImg: data.mainImg,
+                },
+                message: `Company has been updated and but there was an error sending the email. Please, contact this company and send them an email to let them know. The error was this one: ${err}`
+              });
+            })
+
+            
           })
           .catch(err => {
             return res.status(500).json({
@@ -398,13 +442,14 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
 
         if(Boolean(item)){
 
+          const activeValue = req.params.active=='true'?true:false;
           // we only change the accepted value according to what we recieved.
           Company.findByIdAndUpdate(
             {_id: req.params.id}, 
             {
               email: item.email, 
               full_name: item.full_name,
-              active: req.params.active,
+              active: activeValue,
               password: item.password,
               mainImg: item.mainImg,
               accepted: item.accepted,
@@ -415,17 +460,55 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
             }
           )
           .then((data) => {
-            return res.status(200).json({
-              success: true,
-              data: {
-                email: data.email,
-                full_name: data.full_name,
-                active: data.active,
-                accepted: data.accepted,
-                mainImg: data.mainImg,
-              },
-              message: 'Company has been updated!'
+
+            let output = active_a_company(data, activeValue);
+
+            // create reusable transporter object using the default SMTP transport
+            let transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                  user: process.env.MAIL_DIRECTION,
+                  pass: process.env.MAIL_PASS,
+              }
+            });
+
+            // send mail with defined transport object
+            let mailOptions = {
+              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              to: data.email, // list of receivers
+              subject: activeValue?`Your company is active now!`:`Your company has been inactivated.`, // Subject line
+              text: activeValue?`Your company is active now!`:`We are extremely sorry, but your company has been inactivated...`, // plain text body
+              html: output, // html body
+            }
+
+            transporter.sendMail(mailOptions)
+            .then( () => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  accepted: data.accepted,
+                  mainImg: data.mainImg,
+                },
+                message: 'Company has been updated and the mail was sent!'
+              });
             })
+            .catch( err => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  accepted: data.accepted,
+                  mainImg: data.mainImg,
+                },
+                message: `Company has been updated and but there was an error sending the email!. Please, contact this company and send them an email to let them know. The error was this one: ${err}`
+              });
+            });
+
           })
           .catch(err => {
             return res.status(500).json({

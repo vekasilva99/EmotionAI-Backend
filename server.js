@@ -2,11 +2,15 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
-require('dotenv').config();
-
+const exphbs = require('express-handlebars');
 const app = express();
 const port = process.env.PORT || 5000;
+
+// View engine setup
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars'); 
+
+require('dotenv').config();
 
 app.use(cors());
 app.use(express.json());

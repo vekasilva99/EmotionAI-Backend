@@ -1,9 +1,11 @@
 const router = require('express').Router();
-let User = require('../models/user.model');
 const e = require('express');
 const bcrypt = require('bcryptjs');
-const {createToken, verifyToken} = require('../utils/services');
-const {LIMIT, PAGE} = require('./../utils/pagination.config')
+const nodemailer = require('nodemailer');
+let User = require('../models/user.model');
+const { createToken, verifyToken } = require('../utils/services');
+const {LIMIT, PAGE} = require('./../utils/pagination.config');
+const {active_an_user} = require('../utils/mail_templates');
 
 // get users
 router.route('/').get((req, res) => {
@@ -317,6 +319,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
 
         if(Boolean(item)){
 
+          const activeValue = req.params.active=='true'?true:false;
           // we only change the active value according to what we recieved.
           User.findOneAndUpdate(
             {_id: req.params.id},
@@ -328,26 +331,66 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
               country: item.country,
               gender: item.gender,
               birthdate: item.birthdate,
-              active: req.params.active,
+              active: activeValue,
             },
             {
               returnOriginal: false, 
               useFindAndModify: false 
             }
           ).then( (data) => {
-            return res.status(200).json({
-              success: true,
-              data: {
-                email: data.email,
-                full_name: data.full_name,
-                active: data.active,
-                isAdmin: data.isAdmin,
-                country: data.country,
-                gender: data.gender,
-                birthdate: data.birthdate
-              },
-              message: 'User has been updated!'
+
+            let output = active_an_user(data, activeValue);
+
+            // create reusable transporter object using the default SMTP transport
+            let transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                  user: process.env.MAIL_DIRECTION,
+                  pass: process.env.MAIL_PASS,
+              }
+            });
+
+            // send mail with defined transport object
+            let mailOptions = {
+              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              to: data.email, // list of receivers
+              subject: activeValue?`You have been activated!`:`You have been inactivated.`, // Subject line
+              text: activeValue?`You have been activated!`:`We are extremely sorry, but you have been inactivated...`, // plain text body
+              html: output, // html body
+            }
+
+            transporter.sendMail(mailOptions)
+            .then( () => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  isAdmin: data.isAdmin,
+                  country: data.country,
+                  gender: data.gender,
+                  birthdate: data.birthdate
+                },
+                message: 'User has been updated and the mail was sent!'
+              });
             })
+            .catch( err => {
+              return res.status(200).json({
+                success: true,
+                data: {
+                  email: data.email,
+                  full_name: data.full_name,
+                  active: data.active,
+                  isAdmin: data.isAdmin,
+                  country: data.country,
+                  gender: data.gender,
+                  birthdate: data.birthdate
+                },
+                message: `User has been updated and but there was an error sending the email!. Please, contact this user and send them an email to let him/her know. The error was this one: ${err}`
+              });
+            });
+
           })
           .catch(err => {
             return res.status(500).json({
