@@ -491,5 +491,39 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
   
 });
 
+// get user info according to his/her token
+router.get('/info', verifyToken, (req, res) => {
+
+  User.findById(req.payload.sub)
+  .then( user => {
+    if(Boolean(user)){
+      return res.status(200).json({
+        success: true,
+        data: {
+          full_name: data.full_name,
+          email: data.email,
+          active: data.active,
+          birthdate: data.birthdate,
+          country: data.country,
+          gender: data.gender,
+          isAdmin: data.isAdmin
+        }
+      })
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `This user doesn't exist.`
+      });
+    };
+  })
+  .catch( err => {
+    return res.status(500).json({
+      success: false,
+      message: `Server error. Error: ` + err
+    });
+  });
+  
+});
+
 
 module.exports = router;

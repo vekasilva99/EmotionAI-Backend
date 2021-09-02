@@ -606,5 +606,35 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
   
 });
 
+// get company info according to itstoken
+router.get('/info', verifyToken, (req, res) => {
+
+  Company.findById(req.payload.sub)
+  .then( company => {
+    if(Boolean(company)){
+      return res.status(200).json({
+        success: true,
+        email: item.email,
+        accepted: item.accepted,
+        active: item.active,
+        mainImg: item.mainImg,
+        full_name: item.full_name
+      })
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `This company doesn't exist.`
+      });
+    };
+  })
+  .catch( err => {
+    return res.status(500).json({
+      success: false,
+      message: `Server error. Error: ` + err
+    });
+  })
+  
+  
+});
 
 module.exports = router;
