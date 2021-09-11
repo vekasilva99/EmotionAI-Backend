@@ -29,7 +29,7 @@ const companySchema = new Schema({
     },
     mainImg: {
         type: String,
-        required: true,
+        // required: true,
     },
 
 });

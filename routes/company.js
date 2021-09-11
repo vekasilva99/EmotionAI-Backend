@@ -142,6 +142,73 @@ router.post('/register', (req, res) => {
   
 });
 
+// upload img after the company registered itself
+router.route('/register/:id/upload/image').post( (req, res) => {
+
+  Company.findById(req.params.id)
+    .then( async (item) => {
+
+      if(Boolean(item)){
+
+        const {
+          mainImg
+        } = req.body
+
+        // when we update a company, we won't change its password, accepted nor active values.
+        Company.findByIdAndUpdate(
+          {_id: req.params.id}, 
+          {
+            email: item.email, 
+            full_name: item.full_name,
+            active: item.active,
+            accepted: item.accepted,
+            password: item.password,
+            mainImg,
+  
+          }, 
+          {
+            returnOriginal: false, 
+            useFindAndModify: false 
+          }
+        )
+        .then((data) => {
+          return res.status(200).json({
+            success: true,
+            data: {
+              email: data.email,
+              full_name: data.full_name,
+              active: data.active,
+              accepted: data.accepted,
+              mainImg: data.mainImg,
+            },
+            message: 'Company has been updated!'
+          })
+        })
+        .catch(err => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        });
+
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: `This company is not registered, so it can't be updated.`
+        });
+        
+      }
+
+      
+    })
+    .catch(err => {
+      return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    })});
+
+});
+
 // get a specific company
 router.route('/:id').get((req, res) => {
 
