@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
+let Video = require('../models/video.model');
 const { LIMIT, PAGE } = require('./../utils/pagination.config')
 const { verifyToken } = require('../utils/services');
 const {acceptance_of_a_company, active_a_company} = require('../utils/mail_templates');
@@ -119,7 +120,15 @@ router.post('/register', (req, res) => {
 
                   return res.status(200).json({
                     success: true,
-                    message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`
+                    message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                    data: {
+                      email: data.email,
+                      accepted: data.accepted,
+                      active: data.active,
+                      mainImg: data.mainImg,
+                      full_name: data.full_name,
+                      _id: data._id,
+                    }
                   });
 
                 })
@@ -528,6 +537,20 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
           )
           .then((data) => {
 
+            Video.updateMany(
+              {"companyID": req.params.id},
+              {
+                $set: {
+                  "active": activeValue
+                }
+              }
+            ).then( () => {
+              console.log('active videos: ', activeValue);
+            })
+            .catch( err => {
+              console.log('Error when we tried to active/inactive videos. Error: ', err);
+            })
+
             let output = active_a_company(data, activeValue);
 
             // create reusable transporter object using the default SMTP transport
@@ -575,6 +598,8 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
                 message: `Company has been updated and but there was an error sending the email!. Please, contact this company and send them an email to let them know. The error was this one: ${err}`
               });
             });
+
+            
 
           })
           .catch(err => {
@@ -681,11 +706,13 @@ router.get('/info', verifyToken, (req, res) => {
     if(Boolean(company)){
       return res.status(200).json({
         success: true,
-        email: item.email,
-        accepted: item.accepted,
-        active: item.active,
-        mainImg: item.mainImg,
-        full_name: item.full_name
+        data: {
+          email: item.email,
+          accepted: item.accepted,
+          active: item.active,
+          mainImg: item.mainImg,
+          full_name: item.full_name,
+        }
       })
     } else {
       return res.status(404).json({

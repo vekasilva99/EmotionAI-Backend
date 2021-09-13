@@ -23,14 +23,16 @@ connection.once('open', () => {
   console.log("MongoDB database connection established successfully");
 })
 
-const authRouter = require('./routes/auth')
-const companyRouter = require('./routes/company')
-const embeddingRouter = require('./routes/embedding')
-const emotionRouter = require('./routes/emotion')
-const userRouter = require('./routes/user')
-const videoRouter = require('./routes/video')
-const viewRouter = require('./routes/view')
+const accountRouter = require('./routes/account');
+const authRouter = require('./routes/auth');
+const companyRouter = require('./routes/company');
+const embeddingRouter = require('./routes/embedding');
+const emotionRouter = require('./routes/emotion');
+const userRouter = require('./routes/user');
+const videoRouter = require('./routes/video');
+const viewRouter = require('./routes/view');
 
+app.use('/account', accountRouter);
 app.use('/login', authRouter);
 app.use('/companies', companyRouter);
 app.use('/embeddings', embeddingRouter);
