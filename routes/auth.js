@@ -109,6 +109,7 @@ router.post('/user', (req, res) => {
                         success: true,
                         token: token,
                         data: {
+                            _id:user._id,
                             full_name: user.full_name,
                             email: user.email,
                             active: user.active,
