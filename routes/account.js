@@ -16,6 +16,7 @@ router.get('/', verifyToken, async (req, res) => {
         return res.status(200).json({
           success: true,
           data: {
+            _id:user._id,
             full_name: user.full_name,
             email: user.email,
             active: user.active,
@@ -29,6 +30,7 @@ router.get('/', verifyToken, async (req, res) => {
         return res.status(200).json({
           success: true,
           data: {
+            _id:company._id,
             email: company.email,
             accepted: company.accepted,
             active: company.active,

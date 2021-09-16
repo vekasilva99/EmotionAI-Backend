@@ -107,6 +107,7 @@ router.post('/register', (req, res) => {
             
               // when we add a company, it will be activate and waiting for acceptance
               const newCompany = new Company({
+                _id,
                 email, 
                 password: hashPassword,
                 full_name,
@@ -122,6 +123,7 @@ router.post('/register', (req, res) => {
                     success: true,
                     message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
                     data: {
+                      _id: data._id,
                       email: data.email,
                       accepted: data.accepted,
                       active: data.active,
@@ -184,6 +186,7 @@ router.route('/register/:id/upload/image').post( (req, res) => {
           return res.status(200).json({
             success: true,
             data: {
+              _id:data._id,
               email: data.email,
               full_name: data.full_name,
               active: data.active,
