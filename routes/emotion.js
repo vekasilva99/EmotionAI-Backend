@@ -99,7 +99,8 @@ router.route('/add').post(verifyToken, async (req, res) => {
           .then((data) => {
             return res.status(200).json({
               success: true,
-              message: `The emotion has been successfully added.`
+              message: `The emotion has been successfully added.`,
+              emotion: data
             })
           })
           .catch(err => {
