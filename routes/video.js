@@ -2,8 +2,10 @@ const router = require('express').Router();
 let Video = require('../models/video.model');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
+let View = require('../models/view.model');
 const {LIMIT, PAGE} = require('./../utils/pagination.config');
-const {verifyToken} = require('../utils/services');
+const {verifyToken, cosinesim} = require('../utils/services');
+const Embedding = require('../models/embedding.model');
 
 // get videos
 router.route('/').get((req, res) => {
@@ -15,7 +17,7 @@ router.route('/').get((req, res) => {
 
   // If keyword, the filter.
   if(companyID){
-    Video.paginate({"companyID": {$regex: companyID}}, {limit, page})
+    Video.paginate({"companyID": companyID}, {limit, page})
     .then(videos => {
       return res.status(200).json({
         success: true,
@@ -272,5 +274,86 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
   }
   
 });
+
+router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) => {
+
+  const {
+    videoId,
+    // emotions is an array with the id of the emotions the user selected
+    emotions,
+  } = req.body;
+
+  View.find({'videoID': videoId})
+  .then( async (items) => {
+ 
+    try {
+
+      // Get the values of the column "time" so later we can group them accroding to this
+      timeValues = await View.distinct("time", {'videoID': videoId});
+      emotionValues = [];
+      queryResultValues = [];
+      
+
+      // Get all the embeddings that belong to every emotion the user selected.
+      for(const emotion of emotions){
+
+        const embeddings = await Embedding.find({emotionID: emotion});
+        emotionValues.push({
+          _id: emotion,
+          embeddings: embeddings.map( emb => emb.embedding)
+        })
+
+      }
+
+      timeValues.map( async(time) => {
+
+        // For every "time" value we have, we get the views
+        viewsSelected = items.filter( item => item.time == time);
+        // viewsValues = [];
+
+        viewsSelected.map( view => {
+
+          console.log('VIEW IS', view._id);
+          viewsValues = [];
+
+          emotionValues.map( emotion => {
+
+            console.log('emotion is ', emotion._id);
+
+            array = emotion.embeddings.map( emb => {
+              return cosinesim(emb, view.embedding)
+            });
+
+            console.log('array is', array);
+
+          })
+          
+        })
+
+
+        
+
+        
+      });
+
+      return res.status(500).json({
+        success: true,
+        message: ''
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      });
+    }
+  })
+  .catch( err => {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    });
+  })
+})
 
 module.exports = router;

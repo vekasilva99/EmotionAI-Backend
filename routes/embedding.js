@@ -16,20 +16,37 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     const page = parseInt(req.query.page, 10) || PAGE;
     const limit = parseInt(req.query.limit, 10) || LIMIT;
+    const emotionID = req.query.emotionID;
 
-    Embedding.paginate({}, {limit, page})
-    .then(embeddings => {
-      return res.status(200).json({
-        success: true,
-        data: embeddings
+    if(emotionID){
+      Embedding.paginate({"emotionID": emotionID}, {limit, page})
+      .then(embeddings => {
+        return res.status(200).json({
+          success: true,
+          data: embeddings
+        })
       })
-    })
-    .catch(err => {
-      return res.status(500).json({
-        success: false,
-        message: 'Server error: ' + err
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        })
       })
-    })
+    } else {
+      Embedding.paginate({}, {limit, page})
+      .then(embeddings => {
+        return res.status(200).json({
+          success: true,
+          data: embeddings
+        })
+      })
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        })
+      })
+    }
 
   }else{
     return res.status(401).json({

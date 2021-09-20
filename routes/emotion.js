@@ -20,7 +20,7 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     // If companyId, the filter.
     if(companyID){
-      Emotion.paginate({"companyID": {$regex: companyID}}, {limit, page})
+      Emotion.paginate({"companyID": companyID}, {limit, page})
       .then(emotions => {
         return res.status(200).json({
           success: true,
@@ -34,7 +34,7 @@ router.route('/').get(verifyToken, async (req, res) => {
         })
       })
     } else {
-      Company.paginate({}, {limit, page})
+      Emotion.paginate({}, {limit, page})
       .then(emotions => {
         return res.status(200).json({
           success: true,
@@ -74,7 +74,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
       const array = items.find( item => item.name==req.body.name);
 
-      if(array.length>0){
+      if(Boolean(array) && array.length>0){
 
         return res.status(400).json({
           success: false,

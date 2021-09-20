@@ -21,7 +21,7 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     // If videoID, the filter.
     if(videoID){
-      View.paginate({"videoID": {$regex: videoID}}, {limit, page})
+      View.paginate({"videoID": videoID}, {limit, page})
       .then(items => {
         return res.status(200).json({
           success: true,
