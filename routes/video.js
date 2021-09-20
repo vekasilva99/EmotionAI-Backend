@@ -320,13 +320,44 @@ router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) =
 
             console.log('emotion is ', emotion._id);
 
-            array = emotion.embeddings.map( emb => {
-              return cosinesim(emb, view.embedding)
-            });
+            cont = 0;
+            belongsToEmotion = false;
 
-            console.log('array is', array);
+            while(!belongsToEmotion && cont<emotion.embeddings.length){
+              const sim = cosinesim(emotion.embeddings[cont], view.embedding);
+              if(sim>0.99){
+                belongsToEmotion = true;
+              }
+              cont = cont + 1;
+            }
+
+            const viewObj = {
+              emotion: emotion._id,
+              belongsToEmotion: belongsToEmotion,
+              viewEmbedding: view.embedding
+            }
+
+            viewsValues.push(viewObj)
+
+          
+
+            // array = emotion.embeddings.map( emb => {
+            //   const sim = cosinesim(emb, view.embedding)
+            //   if(sim>0,99){
+            //     return true
+            //   } else {
+            //     return false
+            //   }
+            // });
+
+            
 
           })
+
+          console.log('');
+          console.log('View values');
+          console.log(viewsValues);
+
           
         })
 

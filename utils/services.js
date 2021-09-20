@@ -48,11 +48,7 @@ module.exports = {
         if((mA)*(mB)!=0){
             similarity = (dotproduct)/((mA)*(mB))
         } else {
-            if(dotproduct==(mA)*(mB)){
-                similarity=1;
-            } else {
-                similarity = 0;
-            }
+            similarity = 0;
         }
         return similarity;
     }
