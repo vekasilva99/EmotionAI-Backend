@@ -2,6 +2,7 @@ const router = require('express').Router();
 let Embedding = require('../models/embedding.model');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
+let Emotion = require('../models/emotion.model');
 const {LIMIT, PAGE} = require('./../utils/pagination.config')
 const {verifyToken} = require('../utils/services');
 
@@ -72,12 +73,31 @@ router.route('/add').post((req, res) => {
     img
   });
 
-  newEmbedding.save()
-  .then((data) => {
-    return res.status(200).json({
-      success: true,
-      message: `The embedding has been added.`
-    })
+
+  Emotion.findById(emotionID)
+  .then( item => {
+    if(Boolean(item)){
+
+      newEmbedding.save()
+      .then((data) => {
+        return res.status(200).json({
+          success: true,
+          message: `The embedding has been added.`
+        })
+      })
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        });
+      });
+
+    }else{
+      return res.status(404).json({
+        success: false,
+        message: 'This emotion does not exist.'
+      });
+    }
   })
   .catch(err => {
     return res.status(500).json({
@@ -85,6 +105,8 @@ router.route('/add').post((req, res) => {
       message: 'Server error: ' + err
     });
   });
+
+  
 });
 
 // Get a specific embedding

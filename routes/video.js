@@ -325,7 +325,9 @@ router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) =
 
             while(!belongsToEmotion && cont<emotion.embeddings.length){
               const sim = cosinesim(emotion.embeddings[cont], view.embedding);
-              if(sim>0.99){
+              console.log('sim is', sim);
+              // if(sim>0.99){
+              if(sim>0.52){
                 belongsToEmotion = true;
               }
               cont = cont + 1;

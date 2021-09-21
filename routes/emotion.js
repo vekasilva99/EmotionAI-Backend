@@ -4,6 +4,7 @@ let Company = require('../models/company.model');
 let User = require('../models/user.model');
 const {LIMIT, PAGE} = require('./../utils/pagination.config')
 const {verifyToken} = require('../utils/services');
+const Embedding = require('../models/embedding.model');
 
 // get emotions
 // Only admins and companies can access to this information
@@ -21,10 +22,10 @@ router.route('/').get(verifyToken, async (req, res) => {
     // If companyId, the filter.
     if(companyID){
       Emotion.paginate({"companyID": companyID}, {limit, page})
-      .then(emotions => {
+      .then(data => {
         return res.status(200).json({
           success: true,
-          data: emotions
+          data: data
         })
       })
       .catch(err => {
