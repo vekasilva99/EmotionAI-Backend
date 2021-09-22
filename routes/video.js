@@ -3,9 +3,12 @@ let Video = require('../models/video.model');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
 let View = require('../models/view.model');
+let Emotion = require('../models/emotion.model');
 const {LIMIT, PAGE} = require('./../utils/pagination.config');
 const {verifyToken, cosinesim} = require('../utils/services');
 const Embedding = require('../models/embedding.model');
+const mongoose = require('mongoose');
+
 
 // get videos
 router.route('/').get((req, res) => {
@@ -63,7 +66,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
       const array = items.find( item => item.name==req.body.name);
 
-      if(Boolean(array) && array.length>0){
+      if(Boolean(array)){
 
         return res.status(400).json({
           success: false,
@@ -290,87 +293,163 @@ router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) =
 
       // Get the values of the column "time" so later we can group them accroding to this
       timeValues = await View.distinct("time", {'videoID': videoId});
+      // We will save here the emotions with their embeddings...
       emotionValues = [];
+      // We will save the results we will send here
       queryResultValues = [];
-      
 
-      // Get all the embeddings that belong to every emotion the user selected.
-      for(const emotion of emotions){
+      // We must turn the Strings to ObjectsId so Mongo can recognize them
+      emotionIds = emotions.map(emotion => {
+        return mongoose.Types.ObjectId(emotion)
+      })
 
-        const embeddings = await Embedding.find({emotionID: emotion});
-        emotionValues.push({
-          _id: emotion,
-          embeddings: embeddings.map( emb => emb.embedding)
-        })
+      // Find the emotions the user selected and check if they exist so we can proceed...
+      const emotionsFound = await Emotion.find({"_id": {"$in": emotionIds}});
 
-      }
+      if((Boolean(emotionsFound) && Boolean(emotions)) && (emotionsFound.length == emotions.length)){
 
-      timeValues.map( async(time) => {
+        // Once we checked the emotions exists, we must validate that all of them are active...
+        const emotionsInactive = emotionsFound.filter( emotion => !emotion.active);
+        
+        if(!Boolean(emotionsInactive) || (Boolean(emotionsInactive) && emotionsInactive.length==0)){
 
-        // For every "time" value we have, we get the views
-        viewsSelected = items.filter( item => item.time == time);
-        // viewsValues = [];
+          // Get all the embeddings that belong to every emotion the user selected.
+          for(const emotion of emotionsFound){
 
-        viewsSelected.map( view => {
+            const embeddings = await Embedding.find({emotionID: emotion._id});
+            emotionValues.push({
+              _id: emotion._id,
+              name: emotion.name,
+              embeddings: embeddings.map( emb => emb.embedding)
+            })
 
-          console.log('VIEW IS', view._id);
-          viewsValues = [];
+          }
 
-          emotionValues.map( emotion => {
+          // We will save views by time. 
+          // Every object here has the time and an array with the views that has info about that if it belongs to one emotion.
+          viewsByTime = []
+          timeValues.map( async(time) => {
 
-            console.log('emotion is ', emotion._id);
+            // For every "time" value we have, we get the views
+            viewsSelected = items.filter( item => item.time == time);
+            explicitViews = []
+            timeObject = {
+              time: time,
+              emotionResults: []
+            };
 
-            cont = 0;
-            belongsToEmotion = false;
+            viewsSelected.map( view => {
 
-            while(!belongsToEmotion && cont<emotion.embeddings.length){
-              const sim = cosinesim(emotion.embeddings[cont], view.embedding);
-              if(sim>0.99){
-                belongsToEmotion = true;
-              }
-              cont = cont + 1;
-            }
+              // console.log('VIEW IS', view._id);
+              belongsToEmotionValues = [];
 
-            const viewObj = {
-              emotion: emotion._id,
-              belongsToEmotion: belongsToEmotion,
-              viewEmbedding: view.embedding
-            }
+              emotionValues.map( emotion => {
 
-            viewsValues.push(viewObj)
+                cont = 0;
+                belongsToEmotion = false;
+
+                while(!belongsToEmotion && cont<emotion.embeddings.length){
+                  const sim = cosinesim(emotion.embeddings[cont], view.embedding);
+                  // console.log('sim is', sim);
+                  // if(sim>0.99){
+                  if(sim>0.52){
+                    belongsToEmotion = true;
+                  }
+                  cont = cont + 1;
+                }
+
+                const viewObj = {
+                  emotion: emotion._id,
+                  belongsToEmotion: belongsToEmotion,
+                }
+
+                belongsToEmotionValues.push(viewObj)
+
+              
+
+                // array = emotion.embeddings.map( emb => {
+                //   const sim = cosinesim(emb, view.embedding)
+                //   if(sim>0,99){
+                //     return true
+                //   } else {
+                //     return false
+                //   }
+                // });
+
+                
+
+              });
+
+              explicitViews.push(belongsToEmotionValues)
+
+              // console.log('');
+              // console.log('View values');
+              // console.log(belongsToEmotionValues);
+
+              
+            })
+
+            // console.log('Time', timeObject.time);
+
+            emotionValues.map( emotion => {
+
+              // console.log('Emotion', emotion.name, emotion._id);
+              // console.log('');
+              // console.log('Explicit views');
+              // console.log('');
+              // console.log(explicitViews);
+
+
+              const viewsSelected = []
+
+              explicitViews.map( viewObj => {
+
+                const filtered = viewObj.filter(emotionInfo => ((String(emotionInfo.emotion)==String(emotion._id) && emotionInfo.belongsToEmotion)))
+                if(Boolean(filtered) && filtered.length>0){
+                  viewsSelected.push(filtered)
+                }
+              })
+
+              timeObject.emotionResults.push({
+                "_id": emotion._id,
+                "name": emotion.name,
+                "views": Number(viewsSelected.length) || 0,
+              })
+            })
+            viewsByTime.push(timeObject);
+          });
 
           
 
-            // array = emotion.embeddings.map( emb => {
-            //   const sim = cosinesim(emb, view.embedding)
-            //   if(sim>0,99){
-            //     return true
-            //   } else {
-            //     return false
-            //   }
-            // });
+          return res.status(500).json({
+            success: true,
+            message: '',
+            data: viewsByTime
+          });
 
-            
+        } else {
 
+          let text = '';
+          emotionsInactive.map( (emotion, index) => {
+            if(index!=emotionsInactive.length-1){
+              text = text + emotion.name + ', '
+            }else{
+              text = text + emotion.name
+            }
           })
+          return res.status(403).json({
+            success: false,
+            message: `This/these emotion/s is/are inactive: ${text}. You can not select any inactive amotions.`,
+          });
 
-          console.log('');
-          console.log('View values');
-          console.log(viewsValues);
+        }
 
-          
-        })
-
-
-        
-
-        
-      });
-
-      return res.status(500).json({
-        success: true,
-        message: ''
-      });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: `One (or more) of the emotions you selected does not exist. Please, select at least one of them (it has to be an active one).`,
+        });
+      }
 
     } catch (err) {
       return res.status(500).json({
@@ -385,6 +464,16 @@ router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) =
       message: 'Server error: ' + err
     });
   })
-})
+});
+
+router.route('/statistics/emotions-in-video/2').get(verifyToken, async(req, res) => {
+  const {
+    videoId,
+    // emotions is an array with the id of the emotions the user selected
+    emotions,
+  } = req.body;
+
+  
+});
 
 module.exports = router;

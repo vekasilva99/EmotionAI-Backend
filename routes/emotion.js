@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const mongoose = require('mongoose');
 let Emotion = require('../models/emotion.model');
 let Company = require('../models/company.model');
 let User = require('../models/user.model');
@@ -18,36 +19,71 @@ router.route('/').get(verifyToken, async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || LIMIT;
     const companyID = req.query.companyID;
 
-    // If companyId, the filter.
-    if(companyID){
-      Emotion.paginate({"companyID": companyID}, {limit, page})
-      .then(emotions => {
-        return res.status(200).json({
-          success: true,
-          data: emotions
-        })
-      })
-      .catch(err => {
+      try{
+        // If companyId, the filter.
+        if(companyID){
+
+          const myAggregate = Emotion.aggregate([
+            { $match: { companyID: mongoose.Types.ObjectId(companyID) } },
+            {
+              $lookup: {
+                from: "embeddings",
+                localField: "_id",
+                foreignField: "emotionID",
+                as: "embeddings",
+              }
+            },
+          ]);
+
+          Emotion.aggregatePaginate(myAggregate, {limit, page})
+            .then( (data) => {
+              return res.status(200).json({
+                success: true,
+                data: data
+              })
+            })
+            .catch( (err) => {
+              return res.status(500).json({
+                success: false,
+                message: 'Server error: ' + err
+              });
+            });
+
+
+        } else {
+
+          const myAggregate = Emotion.aggregate([
+            {
+              $lookup: {
+                from: "embeddings",
+                localField: "_id",
+                foreignField: "emotionID",
+                as: "embeddings",
+              }
+            },
+          ]);
+
+          Emotion.aggregatePaginate(myAggregate, {limit, page})
+            .then( (data) => {
+              return res.status(200).json({
+                success: true,
+                data: data
+              })
+            })
+            .catch( (err) => {
+              return res.status(500).json({
+                success: false,
+                message: 'Server error: ' + err
+              });
+            });
+          
+        }
+      } catch (err) {
         return res.status(500).json({
           success: false,
-          message: 'Server error: ' + err
-        })
-      })
-    } else {
-      Emotion.paginate({}, {limit, page})
-      .then(emotions => {
-        return res.status(200).json({
-          success: true,
-          data: emotions
-        })
-      })
-      .catch(err => {
-        return res.status(500).json({
-          success: false,
-          message: 'Server error: ' + err
-        })
-      })
-    }
+          message: `Server error. Error: ${err}.`
+        });
+      }
 
   } else {
 
@@ -57,6 +93,7 @@ router.route('/').get(verifyToken, async (req, res) => {
     });
 
   }
+    
 });
 
 // add emotions
@@ -74,7 +111,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
       const array = items.find( item => item.name==req.body.name);
 
-      if(Boolean(array) && array.length>0){
+      if(Boolean(array)){
 
         return res.status(400).json({
           success: false,
@@ -142,31 +179,74 @@ router.route('/:id').get(verifyToken, async (req, res) => {
   
   if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
 
-    Emotion.findById(req.params.id)
-    .then(item => {
+    try{
+      Emotion.aggregate([
+        { $match: { _id: mongoose.Types.ObjectId(req.params.id) } },
+        {
+          $lookup: {
+            from: "embeddings",
+            localField: "_id",
+            foreignField: "emotionID",
+            as: "embeddings",
+          }
+        },
+      ]).then( item => {
 
-      if(Boolean(item)){
+        if(Boolean(item) && item.length>0){
 
-        return res.status(200).json({
-          success: true,
-          data: item
-        });
+          return res.status(200).json({
+            success: true,
+            data: item
+          });
 
-      } else {
+        } else {
 
-        return res.status(404).json({
+          return res.status(404).json({
+            success: false,
+            message: 'This item does not exist.'
+          })
+
+        }
+      })
+      .catch(err => {
+        return res.status(500).json({
           success: false,
-          message: 'This item does not exist.'
+          message: 'Server error: ' + err
         })
+      });
 
-      }
-    })
-    .catch(err => {
+    } catch (err) {
       return res.status(500).json({
         success: false,
         message: 'Server error: ' + err
       })
-    });
+    }
+
+    // Emotion.findById(req.params.id)
+    // .then(item => {
+
+    //   if(Boolean(item)){
+
+    //     return res.status(200).json({
+    //       success: true,
+    //       data: item
+    //     });
+
+    //   } else {
+
+    //     return res.status(404).json({
+    //       success: false,
+    //       message: 'This item does not exist.'
+    //     })
+
+    //   }
+    // })
+    // .catch(err => {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: 'Server error: ' + err
+    //   })
+    // });
 
   } else {
 
