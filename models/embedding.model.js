@@ -10,7 +10,7 @@ const embeddingSchema = new Schema({
         required: true,
     },
     embedding: {
-        type: Object,
+        type: [Number],
         required: true,
     },
     img: {
