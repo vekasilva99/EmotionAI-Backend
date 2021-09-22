@@ -464,6 +464,16 @@ router.route('/statistics/emotions-in-video').get(verifyToken, async(req, res) =
       message: 'Server error: ' + err
     });
   })
-})
+});
+
+router.route('/statistics/emotions-in-video/2').get(verifyToken, async(req, res) => {
+  const {
+    videoId,
+    // emotions is an array with the id of the emotions the user selected
+    emotions,
+  } = req.body;
+
+  
+});
 
 module.exports = router;
