@@ -66,7 +66,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
       const array = items.find( item => item.name==req.body.name);
 
-      if(Boolean(array) && array.length>0){
+      if(Boolean(array)){
 
         return res.status(400).json({
           success: false,
