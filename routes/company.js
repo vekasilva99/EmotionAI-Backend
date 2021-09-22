@@ -15,37 +15,36 @@ router.route('/').get((req, res) => {
   const page = parseInt(req.query.page, 10) || PAGE;
   const limit = parseInt(req.query.limit, 10) || LIMIT;
   const keyword = req.query.keyword;
+  const onlyActive = (req.query.onlyActive && req.query.onlyActive=='true') ? true : false;
+  const onlyAccepted = (req.query.onlyAccepted && req.query.onlyAccepted=='true') ? true : false;
 
-  // If keyword, the filter.
+  let query = {};
+
   if(keyword){
-    Company.paginate({"full_name": {$regex: keyword, $options: 'i'}}, {limit, page})
-    .then(companies => {
-      return res.status(200).json({
-        success: true,
-        data: companies
-      })
-    })
-    .catch(err => {
-      return res.status(500).json({
-        success: false,
-        message: 'Server error: ' + err
-      })
-    })
-  } else {
-    Company.paginate({}, {limit, page})
-    .then(companies => {
-      return res.status(200).json({
-        success: true,
-        data: companies
-      })
-    })
-    .catch(err => {
-      return res.status(500).json({
-        success: false,
-        message: 'Server error: ' + err
-      })
-    })
+    query.full_name = {$regex: keyword, $options: 'i'}
   }
+  if(onlyActive){
+    query.active = true;
+  }
+
+  if(onlyAccepted){
+    query.accepted = true;
+  }
+
+  Company.paginate(query, {limit, page})
+    .then(companies => {
+      return res.status(200).json({
+        success: true,
+        data: companies
+      })
+    })
+    .catch(err => {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error: ' + err
+      })
+    })
+  
 
 });
 

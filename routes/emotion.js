@@ -17,73 +17,57 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     const page = parseInt(req.query.page, 10) || PAGE;
     const limit = parseInt(req.query.limit, 10) || LIMIT;
+
     const companyID = req.query.companyID;
+    const onlyActive = (req.query.onlyActive && req.query.onlyActive=='true') ? true : false;
 
-      try{
-        // If companyId, the filter.
-        if(companyID){
+    let query = {};
 
-          const myAggregate = Emotion.aggregate([
-            { $match: { companyID: mongoose.Types.ObjectId(companyID) } },
-            {
-              $lookup: {
-                from: "embeddings",
-                localField: "_id",
-                foreignField: "emotionID",
-                as: "embeddings",
-              }
-            },
-          ]);
+    if(companyID){
+      query.companyID = mongoose.Types.ObjectId(companyID);
+    }
+    if(onlyActive){
+      query.active = true;
+    }
 
-          Emotion.aggregatePaginate(myAggregate, {limit, page})
-            .then( (data) => {
-              return res.status(200).json({
-                success: true,
-                data: data
-              })
-            })
-            .catch( (err) => {
-              return res.status(500).json({
-                success: false,
-                message: 'Server error: ' + err
-              });
-            });
+    try {
 
+      const myAggregate = Emotion.aggregate([
+        { $match: query
+          // { companyID: mongoose.Types.ObjectId(companyID) }
+        },
+        {
+          $lookup: {
+            from: "embeddings",
+            localField: "_id",
+            foreignField: "emotionID",
+            as: "embeddings",
+          }
+        },
+      ]);
 
-        } else {
-
-          const myAggregate = Emotion.aggregate([
-            {
-              $lookup: {
-                from: "embeddings",
-                localField: "_id",
-                foreignField: "emotionID",
-                as: "embeddings",
-              }
-            },
-          ]);
-
-          Emotion.aggregatePaginate(myAggregate, {limit, page})
-            .then( (data) => {
-              return res.status(200).json({
-                success: true,
-                data: data
-              })
-            })
-            .catch( (err) => {
-              return res.status(500).json({
-                success: false,
-                message: 'Server error: ' + err
-              });
-            });
-          
-        }
-      } catch (err) {
-        return res.status(500).json({
-          success: false,
-          message: `Server error. Error: ${err}.`
+      Emotion.aggregatePaginate(myAggregate, {limit, page})
+        .then( (data) => {
+          return res.status(200).json({
+            success: true,
+            data: data
+          })
+        })
+        .catch( (err) => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          });
         });
-      }
+
+    } catch (err) {
+
+      return res.status(500).json({
+        success: false,
+        message: `Server error. Error: ${err}.`
+      });
+      
+    }
 
   } else {
 

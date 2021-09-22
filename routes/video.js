@@ -17,37 +17,31 @@ router.route('/').get((req, res) => {
   const limit = parseInt(req.query.limit, 10) || LIMIT;
   // const keyword = req.query.keyword;
   const companyID = req.query.companyID
+  const onlyActive = (req.query.onlyActive && req.query.onlyActive=='true') ? true : false;
 
-  // If keyword, the filter.
+  let query = {};
+
   if(companyID){
-    Video.paginate({"companyID": companyID}, {limit, page})
-    .then(videos => {
-      return res.status(200).json({
-        success: true,
-        data: videos
-      })
-    })
-    .catch(err => {
-      return res.status(500).json({
-        success: false,
-        message: 'Server error: ' + err
-      })
-    })
-  } else {
-    Video.paginate({}, {limit, page})
-    .then(videos => {
-      return res.status(200).json({
-        success: true,
-        data: videos
-      })
-    })
-    .catch(err => {
-      return res.status(500).json({
-        success: false,
-        message: 'Server error: ' + err
-      })
-    })
+    query.companyID = companyID;
   }
+  if(onlyActive){
+    query.active = true;
+  }
+
+  Video.paginate(query, {limit, page})
+  .then(videos => {
+    return res.status(200).json({
+      success: true,
+      data: videos
+    })
+  })
+  .catch(err => {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + err
+    })
+  })
+
 });
 
 // add videos
