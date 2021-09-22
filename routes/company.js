@@ -94,52 +94,59 @@ router.post('/register', (req, res) => {
         
             } else {
 
-              const {
-                email, 
-                password,
-                full_name,
-                mainImg
-              } = req.body
+              try {
 
-              // hasing password
-              const salt = await bcrypt.genSalt(10);
-              const hashPassword = await bcrypt.hash(password, salt);
-            
-              // when we add a company, it will be activate and waiting for acceptance
-              const newCompany = new Company({
-                _id,
-                email, 
-                password: hashPassword,
-                full_name,
-                active: true,
-                accepted: false,
-                mainImg
-              });
+                const {
+                  email, 
+                  password,
+                  full_name,
+                  mainImg
+                } = req.body
 
-              newCompany.save()
-                .then((data) => {
-
-                  return res.status(200).json({
-                    success: true,
-                    message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
-                    data: {
-                      _id: data._id,
-                      email: data.email,
-                      accepted: data.accepted,
-                      active: data.active,
-                      mainImg: data.mainImg,
-                      full_name: data.full_name,
-                      _id: data._id,
-                    }
-                  });
-
-                })
-                .catch(err => {
-                  return res.status(500).json({
-                    success: false,
-                    message: 'Server error: ' + err
-                  });
+                // hasing password
+                const salt = await bcrypt.genSalt(10);
+                const hashPassword = await bcrypt.hash(password, salt);
+              
+                // when we add a company, it will be activate and waiting for acceptance
+                const newCompany = new Company({
+                  email, 
+                  password: hashPassword,
+                  full_name,
+                  active: true,
+                  accepted: false,
+                  mainImg
                 });
+
+                newCompany.save()
+                  .then((data) => {
+
+                    return res.status(200).json({
+                      success: true,
+                      message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                      data: {
+                        _id: data._id,
+                        email: data.email,
+                        accepted: data.accepted,
+                        active: data.active,
+                        mainImg: data.mainImg,
+                        full_name: data.full_name,
+                        _id: data._id,
+                      }
+                    });
+
+                  })
+                  .catch(err => {
+                    return res.status(500).json({
+                      success: false,
+                      message: 'Server error: ' + err
+                    });
+                  });
+              } catch (err3){
+                return res.status(500).json({
+                  success: false,
+                  message: 'Server error: ' + err3
+                });
+              }
             }
           }
         })
