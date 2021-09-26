@@ -238,6 +238,7 @@ router.route('/:id').get((req, res) => {
       return res.status(200).json({
         success: true,
         data: {
+          _id: item._id,
           email: item.email,
           accepted: item.accepted,
           active: item.active,
