@@ -168,6 +168,7 @@ router.route('/emotions-in-video').get(verifyToken, async(req, res) => {
 });
 
 // This is a query that returns how many people of each country has watched the video
+// They are sorted (descending), which means that the first country is the one that has more views
 router.route('/country').get(verifyToken, async(req, res) => {
 
     const {
@@ -195,6 +196,9 @@ router.route('/country').get(verifyToken, async(req, res) => {
                             _id: "$country", 
                             total: { $sum: 1 } 
                         }
+                    },
+                    {
+                        $sort : { total : -1 } 
                     }
                 ]).then( data => {
 
@@ -233,9 +237,10 @@ router.route('/country').get(verifyToken, async(req, res) => {
         });
     }
 
-})
+});
 
 // This is a query that returns how many people of each country has watched the video
+// They are sorted (descending), which means that the first gender is the one that has more views
 router.route('/gender').get(verifyToken, async(req, res) => {
 
     const {
@@ -263,6 +268,9 @@ router.route('/gender').get(verifyToken, async(req, res) => {
                             _id: "$gender", 
                             total: { $sum: 1 } 
                         }
+                    },
+                    {
+                        $sort : { total : -1 } 
                     }
                 ]).then( data => {
 
@@ -301,9 +309,10 @@ router.route('/gender').get(verifyToken, async(req, res) => {
         });
     }
 
-})
+});
 
 // This is a query that returns how many people of each country has watched the video
+// They are sorted (descending), which means that the first range age is the one that has more views
 router.route('/age').get(verifyToken, async(req, res) => {
 
     const {
@@ -344,6 +353,9 @@ router.route('/age').get(verifyToken, async(req, res) => {
                             _id: "$ageRange", 
                             total: { $sum: 1 } 
                         }
+                    },
+                    {
+                        $sort : { total : -1 } 
                     }
                 ]).then( data => {
 
@@ -382,7 +394,236 @@ router.route('/age').get(verifyToken, async(req, res) => {
         });
     }
 
-})
+});
+
+// Query that returns which country has more people
+router.route('/top-results/country').get(verifyToken, async(req, res) => {
+
+    const {
+        videoID,
+    } = req.body;
+
+    try {
+
+        // Check if the video exist and if it is active
+        const videoFound = await Video.findById(videoID);
+
+        if( videoFound && videoFound.active){
+
+            if(String(videoFound.companyID) == String(req.payload.sub)){
+
+                // We only to count the countries in one of the timeValues we have
+                timeValues = await View.distinct("time", {'videoID': videoID});
+
+                View.aggregate([
+                    {
+                        $match: {$and: [{videoID: mongoose.Types.ObjectId(videoID)}, {time: timeValues[1]}]}
+                    },
+                    { 
+                        $group: { 
+                            _id: "$country", 
+                            total: { $sum: 1 } 
+                        }
+                    },
+                    {
+                        $sort : { total : -1 } 
+                    },
+                    { $limit : 1 }
+                ]).then( data => {
+
+                    return res.status(200).json({
+                        success: true,
+                        data: data
+                    });
+
+                }).catch( err => {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error: ' + err
+                    });
+                })
+
+            } else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You don't have authorization to perform this action.` 
+                });
+            }
+
+        } else {
+
+            return res.status(404).json({
+                success: false,
+                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+            });
+        }
+
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+        });
+    }
+
+});
+
+// Query that returns which range age has more people
+router.route('/top-results/age').get(verifyToken, async(req, res) => {
+
+    const {
+        videoID,
+    } = req.body;
+
+    try {
+
+        // Check if the video exist and if it is active
+        const videoFound = await Video.findById(videoID);
+
+        if( videoFound && videoFound.active){
+
+            if(String(videoFound.companyID) == String(req.payload.sub)){
+
+                // We only to count the countries in one of the timeValues we have
+                timeValues = await View.distinct("time", {'videoID': videoID});
+
+                View.aggregate([
+                    {
+                        $match: {$and: [{videoID: mongoose.Types.ObjectId(videoID)}, {time: timeValues[1]}]}
+                    },
+                    {
+                        $project: {    
+                            "ageRange": {
+                                $concat: [
+                                    { $cond: [{$lt: ["$age",0]}, "Unknown", ""]}, 
+                                    { $cond: [{$and:[ {$gte:["$age", 0 ]}, {$lt: ["$age", 12]}]}, "Kids", ""] },
+                                    { $cond: [{$and:[ {$gte:["$age",12]}, {$lte:["$age", 21]}]}, "Teenagers", ""]},
+                                    { $cond: [{$and:[ {$gt:["$age",21]}, {$lt:["$age", 60]}]}, "Adults", ""]},
+                                    { $cond: [{$gte:["$age",60]}, "Elderly", ""]}
+                                ]
+                            }  
+                        }    
+                    },
+                    { 
+                        $group: { 
+                            _id: "$ageRange", 
+                            total: { $sum: 1 } 
+                        }
+                    },
+                    {
+                        $sort : { total : -1 } 
+                    },
+                    { $limit : 1 }
+                ]).then( data => {
+
+                    return res.status(200).json({
+                        success: true,
+                        data: data
+                    });
+
+                }).catch( err => {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error: ' + err
+                    });
+                })
+
+            } else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You don't have authorization to perform this action.` 
+                });
+            }
+
+        } else {
+
+            return res.status(404).json({
+                success: false,
+                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+            });
+        }
+
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+        });
+    }
+
+});
+
+// Query that returns which gender has more people
+router.route('/top-results/gender').get(verifyToken, async(req, res) => {
+
+    const {
+        videoID,
+    } = req.body;
+
+    try {
+
+        // Check if the video exist and if it is active
+        const videoFound = await Video.findById(videoID);
+
+        if( videoFound && videoFound.active){
+
+            if(String(videoFound.companyID) == String(req.payload.sub)){
+
+                // We only to count the countries in one of the timeValues we have
+                timeValues = await View.distinct("time", {'videoID': videoID});
+
+                View.aggregate([
+                    {
+                        $match: {$and: [{videoID: mongoose.Types.ObjectId(videoID)}, {time: timeValues[1]}]}
+                    },
+                    { 
+                        $group: { 
+                            _id: "$gender", 
+                            total: { $sum: 1 } 
+                        }
+                    },
+                    {
+                        $sort : { total : -1 } 
+                    },
+                    { $limit: 1}
+                ]).then( data => {
+
+                    return res.status(200).json({
+                        success: true,
+                        data: data
+                    });
+
+                }).catch( err => {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error: ' + err
+                    });
+                })
+
+            } else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You don't have authorization to perform this action.` 
+                });
+            }
+
+        } else {
+
+            return res.status(404).json({
+                success: false,
+                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+            });
+        }
+
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+        });
+    }
+
+});
 
 // router.route('/statistics/emotions-in-video/2').get(verifyToken, async(req, res) => {
 
