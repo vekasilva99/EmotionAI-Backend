@@ -4,6 +4,7 @@ let Company = require('../models/company.model');
 let User = require('../models/user.model');
 const { LIMIT, PAGE } = require('./../utils/pagination.config');
 const { verifyToken } = require('../utils/services');
+const mongoose = require('mongoose');
 
 // get views
 // only admins and companies can access to this information
@@ -12,51 +13,58 @@ router.route('/').get(verifyToken, async (req, res) => {
   const userToken = await User.findById(req.payload.sub);
   const companyToken = await Company.findById(req.payload.sub);
   
-  if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
+  try{
+    if((Boolean(userToken) && userToken.isAdmin) || Boolean(companyToken) ){
 
-    const page = parseInt(req.query.page, 10) || PAGE;
-    const limit = parseInt(req.query.limit, 10) || LIMIT;
-    // const keyword = req.query.keyword;
-    const videoID = req.query.videoID
+      const page = parseInt(req.query.page, 10) || PAGE;
+      const limit = parseInt(req.query.limit, 10) || LIMIT;
+      // const keyword = req.query.keyword;
+      const videoID = req.query.videoID ? mongoose.Types.ObjectId(req.query.videoID) : null
 
-    // If videoID, the filter.
-    if(videoID){
-      View.paginate({"videoID": videoID}, {limit, page})
-      .then(items => {
-        return res.status(200).json({
-          success: true,
-          data: items
+      // If videoID, the filter.
+      if(videoID){
+        View.paginate({"videoID": videoID}, {limit, page})
+        .then(items => {
+          return res.status(200).json({
+            success: true,
+            data: items
+          })
         })
-      })
-      .catch(err => {
-        return res.status(500).json({
-          success: false,
-          message: 'Server error: ' + err
+        .catch(err => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
         })
-      })
+      } else {
+        View.paginate({}, {limit, page})
+        .then(items => {
+          return res.status(200).json({
+            success: true,
+            data: items
+          })
+        })
+        .catch(err => {
+          return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+          })
+        })
+      }
+
     } else {
-      Video.paginate({}, {limit, page})
-      .then(items => {
-        return res.status(200).json({
-          success: true,
-          data: items
-        })
-      })
-      .catch(err => {
-        return res.status(500).json({
-          success: false,
-          message: 'Server error: ' + err
-        })
-      })
+
+      return res.status(401).json({
+        success: false,
+        message: `You don't have authorization to perform this action.`
+      });
+
     }
-
-  } else {
-
-    return res.status(401).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
-    });
-
+      message: 'Server error: ' + err
+    })
   }
 
 });
