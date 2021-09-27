@@ -184,7 +184,7 @@ router.route('/country').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the countries in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -256,7 +256,7 @@ router.route('/gender').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the genders in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -328,7 +328,7 @@ router.route('/age').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the age ranges in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -412,7 +412,7 @@ router.route('/top-results/country').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the countries in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -484,7 +484,7 @@ router.route('/top-results/age').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the age ranges in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -569,7 +569,7 @@ router.route('/top-results/gender').get(verifyToken, async(req, res) => {
 
             if(String(videoFound.companyID) == String(req.payload.sub)){
 
-                // We only to count the countries in one of the timeValues we have
+                // We only need to count the genders in one of the timeValues we have
                 timeValues = await View.distinct("time", {'videoID': videoID});
 
                 View.aggregate([
@@ -623,6 +623,234 @@ router.route('/top-results/gender').get(verifyToken, async(req, res) => {
         });
     }
 
+});
+
+// Query that returns how many views the video has
+router.route('/total-views').get(verifyToken, async(req, res) => {
+
+    const {
+        videoID,
+    } = req.body;
+
+    try {
+
+        // Check if the video exist and if it is active
+        const videoFound = await Video.findById(videoID);
+
+        if( videoFound && videoFound.active){
+
+            if(String(videoFound.companyID) == String(req.payload.sub)){
+
+                // We only need to count the views in one of the timeValues we have
+                timeValues = await View.distinct("time", {'videoID': videoID});
+
+                View.find({$and: [{'videoID': mongoose.Types.ObjectId(videoID)}, {'time': timeValues[1]}]}).count()
+                .then( data => {
+
+                    return res.status(200).json({
+                        success: true,
+                        data: data
+                    });
+
+                }).catch( err => {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error: ' + err
+                    });
+                })
+
+            } else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You don't have authorization to perform this action.` 
+                });
+            }
+
+        } else {
+
+            return res.status(404).json({
+                success: false,
+                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+            });
+        }
+
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+        });
+    }
+});
+
+// This is one of the most important queries, where we get information about people's attention levels during the video
+// people/time 
+router.route('/attention-in-video').get(verifyToken, async(req, res) => {
+
+    const {
+        videoID,
+    } = req.body;
+
+    try{
+        View.aggregate([
+            { $match : {'videoID': mongoose.Types.ObjectId(videoID)}},
+            {
+                $group: { 
+                    _id: { time: "$time", attention: "$attention"}, 
+                    total: { $sum: 1 } 
+                }
+            },
+        ])
+        .then( data => {
+            return res.status(200).json({
+                success: true,
+                data: data
+            });
+        })
+        .catch( err => {
+            return res.status(500).json({
+                success: false,
+                message: 'Server error: ' + err
+            });
+        })
+    }catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error: ' + err
+        });
+    }
+  
+    // View.find({'videoID': videoID})
+    // .then( async (items) => {
+   
+    //   try {
+  
+    //     // Get the values of the column "time" so later we can group them accroding to this
+    //     // timeValues = await View.distinct("time", {'videoID': mongoose.Types.ObjectId(videoID)});
+    //     timeValues = await View.distinct("time", {'videoID': videoID});
+
+    //     // We will save the results we will send here
+    //     queryResultValues = [];
+        
+
+  
+    //     // if((Boolean(emotionsFound) && Boolean(emotions)) && (emotionsFound.length == emotions.length)){
+  
+    //     //   // Once we checked the emotions exists, we must validate that all of them are active...
+    //     //   const emotionsInactive = emotionsFound.filter( emotion => !emotion.active);
+          
+    //     //   if(!Boolean(emotionsInactive) || (Boolean(emotionsInactive) && emotionsInactive.length==0)){
+  
+    //     //     // We will save views by time. 
+    //     //     // Every object here has the time and an array with the views that has info about that if it belongs to one emotion.
+    //     //     viewsByTime = []
+
+    //     //     timeValues.map( async(time) => {
+  
+    //     //       // For every "time" value we have, we get the views
+    //     //       viewsSelected = items.filter( item => item.time == time);
+    //     //       explicitViews = []
+    //     //       timeObject = {
+    //     //         time: time,
+    //     //         emotionResults: []
+    //     //       };
+  
+    //     //       viewsSelected.map( view => {
+  
+    //     //         belongsToEmotionValues = [];
+  
+    //     //         emotionsFound.map( emotion => {
+  
+    //     //           cont = 0;
+    //     //           belongsToEmotion = false;
+  
+    //     //           while(!belongsToEmotion && cont<emotion.embeddings.length){
+  
+    //     //             const sim = cosinesim(emotion.embeddings[cont].embedding, view.embedding);
+    //     //             if(sim>0.99){
+    //     //             // if(sim>0.52){
+    //     //               belongsToEmotion = true;
+    //     //             }
+    //     //             cont = cont + 1;
+    //     //           }
+  
+    //     //           const viewObj = {
+    //     //             emotion: emotion._id,
+    //     //             belongsToEmotion: belongsToEmotion,
+    //     //           }
+  
+    //     //           belongsToEmotionValues.push(viewObj)    
+  
+    //     //         });
+  
+    //     //         explicitViews.push(belongsToEmotionValues)
+  
+    //     //       })
+  
+    //     //       emotionsFound.map( emotion => {
+  
+    //     //         const viewsSelected = []
+  
+    //     //         explicitViews.map( viewObj => {
+  
+    //     //           const filtered = viewObj.filter(emotionInfo => ((String(emotionInfo.emotion)==String(emotion._id) && emotionInfo.belongsToEmotion)))
+    //     //           if(Boolean(filtered) && filtered.length>0){
+    //     //             viewsSelected.push(filtered)
+    //     //           }
+    //     //         })
+  
+    //     //         timeObject.emotionResults.push({
+    //     //           "_id": emotion._id,
+    //     //           "name": emotion.name,
+    //     //           "views": Number(viewsSelected.length) || 0,
+    //     //         })
+    //     //       })
+    //     //       viewsByTime.push(timeObject);
+    //     //     });
+  
+    //     //     return res.status(200).json({
+    //     //       success: true,
+    //     //       message: '',
+    //     //       data: viewsByTime
+    //     //     });
+  
+    //     //   } else {
+  
+    //     //     let text = '';
+    //     //     emotionsInactive.map( (emotion, index) => {
+    //     //       if(index!=emotionsInactive.length-1){
+    //     //         text = text + emotion.name + ', '
+    //     //       }else{
+    //     //         text = text + emotion.name
+    //     //       }
+    //     //     })
+    //     //     return res.status(403).json({
+    //     //       success: false,
+    //     //       message: `This/these emotion/s is/are inactive: ${text}. You can not select any inactive amotions.`,
+    //     //     });
+  
+    //     //   }
+  
+    //     // } else {
+    //     //   return res.status(404).json({
+    //     //     success: false,
+    //     //     message: `One (or more) of the emotions you selected does not exist. Please, select at least one of them (it has to be an active one).`,
+    //     //   });
+    //     // }
+  
+    //   } catch (err) {
+    //     return res.status(500).json({
+    //       success: false,
+    //       message: 'Server error: ' + err
+    //     });
+    //   }
+    // })
+    // .catch( err => {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: 'Server error: ' + err
+    //   });
+    // })
 });
 
 // router.route('/statistics/emotions-in-video/2').get(verifyToken, async(req, res) => {
