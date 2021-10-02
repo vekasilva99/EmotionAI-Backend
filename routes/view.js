@@ -108,6 +108,82 @@ router.route('/add').post((req, res) => {
 
 });
 
+// add multiples views at the same time
+router.route('/add-multiple').post((req, res) => {
+
+  const views = req.body.views
+  const newViews = []
+
+  // Check if we have any views
+  if(!Boolean(views) || (Boolean(views) && views.length==0)){
+    return res.status(403).json({
+      success: false,
+      message: 'You did not send any views to add.'
+    });
+  } else {
+
+    let cont = 0;
+    let viewsAreCorrect = true;
+
+    // Create object View for each view
+    while(viewsAreCorrect && cont<views.length){
+
+      let {
+        videoID,
+        time,
+        embedding,
+        attention,
+        age,
+        gender,
+        country
+      } = views[cont]
+
+      // If view is incomplete we don't add them to the DB
+      if(!Boolean(videoID) || !Boolean(time) || !Boolean(embedding) || attention==undefined || !Boolean(age) || !Boolean(country) || !Boolean(gender)){
+        viewsAreCorrect = false;
+      }
+
+      let newView = new View({
+        videoID,
+        time,
+        embedding,
+        attention,
+        age,
+        gender,
+        country
+      });
+
+      newViews.push(newView);
+
+      cont++;
+    }
+
+    if(viewsAreCorrect){
+      View.insertMany(newViews)
+      .then((data) => {
+        return res.status(200).json({
+          success: true,
+          message: `The views have been successfully added.`
+        })
+      })
+      .catch(err => {
+        return res.status(500).json({
+          success: false,
+          message: 'Server error: ' + err
+        });
+      });
+    }else{
+      return res.status(403).json({
+        success: false,
+        message: 'One or more of the required fields to create the views are missing. Each view needs information about its time, its video, its embedding, its attention, its age, its gender and its country. '
+      });
+    }
+  }
+
+  
+
+});
+
 // get a specific view
 // only admins and companies can access to this information
 router.route('/:id').get(verifyToken, async (req, res) => {
