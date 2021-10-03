@@ -7,7 +7,7 @@ let User = require('../models/user.model');
 let Video = require('../models/video.model');
 const { LIMIT, PAGE } = require('./../utils/pagination.config')
 const { verifyToken } = require('../utils/services');
-const {acceptance_of_a_company, active_a_company} = require('../utils/mail_templates');
+const {acceptance_of_a_company, active_a_company, company_registered} = require('../utils/mail_templates');
 
 // get companies
 router.route('/').get((req, res) => {
@@ -119,19 +119,64 @@ router.post('/register', (req, res) => {
                 newCompany.save()
                   .then((data) => {
 
-                    return res.status(200).json({
-                      success: true,
-                      message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
-                      data: {
-                        _id: data._id,
-                        email: data.email,
-                        accepted: data.accepted,
-                        active: data.active,
-                        mainImg: data.mainImg,
-                        full_name: data.full_name,
-                        _id: data._id,
+                    let output = company_registered(data);
+
+                    // create reusable transporter object using the default SMTP transport
+                    let transporter = nodemailer.createTransport({
+                      service: 'gmail',
+                      auth: {
+                          user: process.env.MAIL_DIRECTION,
+                          pass: process.env.MAIL_PASS,
                       }
                     });
+
+                    // send mail with defined transport object
+                    let mailOptions = {
+                      from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
+                      to: process.env.MAIL_DIRECTION, // list of receivers
+                      subject: `New company has registered!`, // Subject line
+                      text: `Hey there! You have a request from a new company that want to join us!`, // plain text body
+                      html: output, // html body
+                    }
+
+                    transporter.sendMail(mailOptions)
+                    .then( () => {
+
+                      return res.status(200).json({
+                        success: true,
+                        message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                        data: {
+                          _id: data._id,
+                          email: data.email,
+                          accepted: data.accepted,
+                          active: data.active,
+                          mainImg: data.mainImg,
+                          full_name: data.full_name,
+                          _id: data._id,
+                        },
+                        mailSent: true
+                      });
+
+                    })
+                    .catch( err => {
+                      return res.status(200).json({
+                        success: true,
+                        message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                        data: {
+                          _id: data._id,
+                          email: data.email,
+                          accepted: data.accepted,
+                          active: data.active,
+                          mainImg: data.mainImg,
+                          full_name: data.full_name,
+                          _id: data._id,
+                        },
+                        mailSent: false,
+                        mailMessage: 'An error ocurred when we tried to alert the admins about the new company registered. The error was: '+ err
+                      });
+                    })
+
+                    
 
                   })
                   .catch(err => {
@@ -443,7 +488,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
 
             // send mail with defined transport object
             let mailOptions = {
-              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
               subject: acceptedValue?`Your company has been accepted!`:`Your company has been rejected.`, // Subject line
               text: acceptedValue?`Your company has been accepted!`:`We are extremely sorry, but your company has been rejected...`, // plain text body
@@ -574,7 +619,7 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
 
             // send mail with defined transport object
             let mailOptions = {
-              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
               subject: activeValue?`Your company is active now!`:`Your company has been inactivated.`, // Subject line
               text: activeValue?`Your company is active now!`:`We are extremely sorry, but your company has been inactivated...`, // plain text body

@@ -352,7 +352,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
 
             // send mail with defined transport object
             let mailOptions = {
-              from: `"Drinkly Team" <${process.env.MAIL_DIRECTION}>`, // sender address
+              from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
               subject: activeValue?`You have been activated!`:`You have been inactivated.`, // Subject line
               text: activeValue?`You have been activated!`:`We are extremely sorry, but you have been inactivated...`, // plain text body
