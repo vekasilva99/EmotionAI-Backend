@@ -23,7 +23,9 @@ router.get('/', verifyToken, async (req, res) => {
             birthdate: user.birthdate,
             country: user.country,
             gender: user.gender,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            role:user.isAdmin ? "admin" : "user"
+          
           }
         });
       }else{
@@ -35,7 +37,8 @@ router.get('/', verifyToken, async (req, res) => {
             accepted: company.accepted,
             active: company.active,
             mainImg: company.mainImg,
-            full_name: company.full_name
+            full_name: company.full_name,
+            role:"company"
           }
         })
       }

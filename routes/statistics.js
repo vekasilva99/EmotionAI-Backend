@@ -16,7 +16,7 @@ router.route('/emotions-in-video').get(verifyToken, async(req, res) => {
         videoID,
       // emotions is an array with the id of the emotions the user selected
         emotions,
-    } = req.body;
+    } = req.query
 
     if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
   
@@ -173,11 +173,11 @@ router.route('/emotions-in-video').get(verifyToken, async(req, res) => {
 
 // This is a query that returns how many people of each country has watched the video
 // They are sorted (descending), which means that the first country is the one that has more views
-router.route('/country').get(verifyToken, async(req, res) => {
+router.route('/country/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -245,11 +245,11 @@ router.route('/country').get(verifyToken, async(req, res) => {
 
 // This is a query that returns how many people of each country has watched the video
 // They are sorted (descending), which means that the first gender is the one that has more views
-router.route('/gender').get(verifyToken, async(req, res) => {
+router.route('/gender/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -317,11 +317,11 @@ router.route('/gender').get(verifyToken, async(req, res) => {
 
 // This is a query that returns how many people of each country has watched the video
 // They are sorted (descending), which means that the first range age is the one that has more views
-router.route('/age').get(verifyToken, async(req, res) => {
+router.route('/age/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -401,11 +401,11 @@ router.route('/age').get(verifyToken, async(req, res) => {
 });
 
 // Query that returns which country has more people
-router.route('/top-results/country').get(verifyToken, async(req, res) => {
+router.route('/top-results/country/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -473,11 +473,11 @@ router.route('/top-results/country').get(verifyToken, async(req, res) => {
 });
 
 // Query that returns which range age has more people
-router.route('/top-results/age').get(verifyToken, async(req, res) => {
+router.route('/top-results/age/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -558,11 +558,11 @@ router.route('/top-results/age').get(verifyToken, async(req, res) => {
 });
 
 // Query that returns which gender has more people
-router.route('/top-results/gender').get(verifyToken, async(req, res) => {
+router.route('/top-results/gender/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -630,11 +630,11 @@ router.route('/top-results/gender').get(verifyToken, async(req, res) => {
 });
 
 // Query that returns how many views the video has
-router.route('/total-views').get(verifyToken, async(req, res) => {
+router.route('/total-views/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -689,11 +689,11 @@ router.route('/total-views').get(verifyToken, async(req, res) => {
 
 // This is one of the most important queries, where we get information about people's attention levels during the video
 // people/time 
-router.route('/attention-in-video').get(verifyToken, async(req, res) => {
+router.route('/attention-in-video/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -860,11 +860,11 @@ router.route('/attention-in-video').get(verifyToken, async(req, res) => {
 });
 
 // What percentage of the people is paying attention
-router.route('/paying-attention').get(verifyToken, async(req, res) => {
+router.route('/paying-attention/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
-    } = req.body;
+    } = req.params;
 
     try {
 
@@ -928,13 +928,13 @@ router.route('/paying-attention').get(verifyToken, async(req, res) => {
 });
 
 // What emotion is our predominant one
-router.route('/predominant-emotion').get(verifyToken, async(req, res) => {
+router.route('/predominant-emotion/:videoID').get(verifyToken, async(req, res) => {
 
     const {
         videoID,
       // emotions is an array with the id of the emotions the user selected
         emotions,
-    } = req.body;
+    } = req.params;
 
     if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
   
