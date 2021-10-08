@@ -85,7 +85,7 @@ router.post('/user', (req, res) => {
         email,
         password
     } = req.body
-
+console.log("LOG IN", req)
     User.findOne({email: email})
     .then( async user => {
 

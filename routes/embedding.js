@@ -209,7 +209,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
           embedding,
           img
         } = req.body
-  
+ 
         Embedding.findByIdAndUpdate(
           {_id: req.params.id}, 
           {
