@@ -42,7 +42,8 @@ router.post('/company', (req, res) => {
                             email: company.email,
                             active: company.active,
                             accepted: company.accepted,
-                            mainImg: company.mainImg
+                            mainImg: company.mainImg,
+                            _id:company._id
                         },
                         message: 'Company successfully authenticated.'
                     });

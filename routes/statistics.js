@@ -10,14 +10,14 @@ const mongoose = require('mongoose');
 
 // This is the main query, where we get information about what are the emotions that are in the video
 // people/time (each emotion)
-router.route('/emotions-in-video').get(verifyToken, async(req, res) => {
+router.route('/emotions-in-video').post(verifyToken, async(req, res) => {
 
     const {
         videoID,
       // emotions is an array with the id of the emotions the user selected
         emotions,
-    } = req.query
-
+    } = req.body
+console.log(req.body)
     if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
   
         View.find({'videoID': videoID})
@@ -80,8 +80,14 @@ router.route('/emotions-in-video').get(verifyToken, async(req, res) => {
                             while(!belongsToEmotion && cont<emotion.embeddings.length){
             
                                 const sim = cosinesim(emotion.embeddings[cont].embedding, view.embedding);
+<<<<<<< HEAD
                                 if(sim>process.env.COS_SIM_CONSTANT){
                                     belongsToEmotion = true;
+=======
+                                // if(sim>0.99){
+                                if(sim>0.52){
+                                belongsToEmotion = true;
+>>>>>>> 819577b... Back
                                 }
                                 cont = cont + 1;
                             }
@@ -927,13 +933,15 @@ router.route('/paying-attention/:videoID').get(verifyToken, async(req, res) => {
 });
 
 // What emotion is our predominant one
-router.route('/predominant-emotion/:videoID').get(verifyToken, async(req, res) => {
+router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
 
     const {
         videoID,
       // emotions is an array with the id of the emotions the user selected
         emotions,
-    } = req.params;
+    } = req.body;
+
+    console.log(emotions)
 
     if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
   
