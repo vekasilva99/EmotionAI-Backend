@@ -17,7 +17,7 @@ router.route('/emotions-in-video').post(verifyToken, async(req, res) => {
       // emotions is an array with the id of the emotions the user selected
         emotions,
     } = req.body
-console.log(req.body)
+
     if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
   
         View.find({'videoID': videoID})
@@ -80,14 +80,8 @@ console.log(req.body)
                             while(!belongsToEmotion && cont<emotion.embeddings.length){
             
                                 const sim = cosinesim(emotion.embeddings[cont].embedding, view.embedding);
-<<<<<<< HEAD
-                                if(sim>process.env.COS_SIM_CONSTANT){
+                                if(sim>Number(process.env.COS_SIM_CONSTANT)){
                                     belongsToEmotion = true;
-=======
-                                // if(sim>0.99){
-                                if(sim>0.52){
-                                belongsToEmotion = true;
->>>>>>> 819577b... Back
                                 }
                                 cont = cont + 1;
                             }
@@ -989,7 +983,7 @@ router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
                                 while(!belongsToEmotion && cont<emotion.embeddings.length){
                 
                                     const sim = cosinesim(emotion.embeddings[cont].embedding, view.embedding);
-                                    if(sim>process.env.COS_SIM_CONSTANT){
+                                    if(sim>Number(process.env.COS_SIM_CONSTANT)){
                                         belongsToEmotion = true;
                                     }
                                     cont = cont + 1;
@@ -1095,160 +1089,80 @@ router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
 router.route('/emotions-in-photo').post(verifyToken, async(req, res) => {
 
     const {
-        videoID,
       // emotions is an array with the id of the emotions the user selected
         emotions,
         photo_embedding,
-    } = req.query
+    } = req.body
 
-    if(Boolean(emotions) && Boolean(videoID) && emotions.length>0){
-  
-        View.find({'videoID': videoID})
-        .then( async (items) => {
-    
-            try {
-        
-                // Get the values of the column "time" so later we can group them accroding to this
-                // timeValues = await View.distinct("time", {'videoID': mongoose.Types.ObjectId(videoID)});
-                timeValues = await View.distinct("time", {'videoID': videoID});
-        
-                // We must turn the Strings to ObjectsId so Mongo can recognize them
-                emotionIds = emotions.map(emotion => {
-                    return mongoose.Types.ObjectId(emotion)
-                })
-        
-                // Find the emotions the user selected and check if they exist so we can proceed...
-                const emotionsFound = await Emotion.aggregate([
-                    {$match: {_id: {"$in": emotionIds}}},
-                    {
-                        $lookup: {
-                            from: "embeddings",
-                            localField: "_id",
-                            foreignField: "emotionID",
-                            as: "embeddings",
-                        }
-                    }
-                ]);
-        
-                if((Boolean(emotionsFound) && Boolean(emotions)) && (emotionsFound.length == emotions.length)){
-        
-                    // Once we checked the emotions exists, we must validate that all of them are active...
-                    const emotionsInactive = emotionsFound.filter( emotion => !emotion.active);
-                    
-                    if(!Boolean(emotionsInactive) || (Boolean(emotionsInactive) && emotionsInactive.length==0)){
-            
-                        // We will save views by time. 
-                        // Every object here has the time and an array with the views that has info about that if it belongs to one emotion.
-                        viewsByTime = []
+    // console.log('holax', photo_embedding.length);
 
-                        timeValues.map( async(time) => {
-            
-                        // For every "time" value we have, we get the views
-                        viewsSelected = items.filter( item => item.time == time);
-                        explicitViews = []
-                        timeObject = {
-                            time: time,
-                            emotionResults: []
-                        };
-            
-                        viewsSelected.map( view => {
-            
-                            belongsToEmotionValues = [];
-            
-                            emotionsFound.map( emotion => {
-            
-                            cont = 0;
-                            belongsToEmotion = false;
-            
-                            while(!belongsToEmotion && cont<emotion.embeddings.length){
-            
-                                const sim = cosinesim(emotion.embeddings[cont].embedding, view.embedding);
-                                if(sim>process.env.COS_SIM_CONSTANT){
-                                    belongsToEmotion = true;
-                                }
-                                cont = cont + 1;
-                            }
-            
-                            const viewObj = {
-                                emotion: emotion._id,
-                                belongsToEmotion: belongsToEmotion,
-                            }
-            
-                            belongsToEmotionValues.push(viewObj)    
-            
-                            });
-            
-                            explicitViews.push(belongsToEmotionValues)
-            
-                        })
-            
-                        emotionsFound.map( emotion => {
-            
-                            const viewsSelected = []
-            
-                            explicitViews.map( viewObj => {
-            
-                                const filtered = viewObj.filter(emotionInfo => ((String(emotionInfo.emotion)==String(emotion._id) && emotionInfo.belongsToEmotion)))
-                                if(Boolean(filtered) && filtered.length>0){
-                                    viewsSelected.push(filtered)
-                                }
-                            })
-            
-                            timeObject.emotionResults.push({
-                                "_id": emotion._id,
-                                "name": emotion.name,
-                                "views": Number(viewsSelected.length) || 0,
-                            })
-                        })
-                        viewsByTime.push(timeObject);
-                        });
-            
-                        return res.status(200).json({
-                            success: true,
-                            data: viewsByTime
-                        });
-            
-                    } else {
-            
-                        let text = '';
-                        emotionsInactive.map( (emotion, index) => {
-                            if(index!=emotionsInactive.length-1){
-                                text = text + emotion.name + ', '
-                            }else{
-                                text = text + emotion.name
-                            }
-                        })
-                        return res.status(403).json({
-                            success: false,
-                            message: `This/these emotion/s is/are inactive: ${text}. You can not select any inactive amotions.`,
-                        });
-            
+    if(Boolean(emotions) && Boolean(photo_embedding) && emotions.length>0 && photo_embedding.length>0){
+
+        try{
+
+            // We must turn the Strings to ObjectsId so Mongo can recognize them
+            emotionIds = emotions.map(emotion => {
+                return mongoose.Types.ObjectId(emotion)
+            })
+
+            // Find the emotions the user selected and check if they exist so we can proceed...
+            const emotionsFound = await Emotion.aggregate([
+                {$match: {_id: {"$in": emotionIds}}},
+                {
+                    $lookup: {
+                        from: "embeddings",
+                        localField: "_id",
+                        foreignField: "emotionID",
+                        as: "embeddings",
                     }
-        
-                } else {
-                return res.status(404).json({
-                    success: false,
-                    message: `One (or more) of the emotions you selected does not exist. Please, select at least one of them (it has to be an active one).`,
-                });
                 }
-        
-            } catch (err) {
-                return res.status(500).json({
-                success: false,
-                message: 'Server error: ' + err
-                });
-            }
-        })
-        .catch( err => {
+            ]);
+
+            const queryAnswer = []
+
+            emotionsFound.map( emotion => {
+
+                let belongsToEmotion=false;
+                let cont = 0;
+                let sim = 0;
+
+                while(!belongsToEmotion && cont<emotion.embeddings.length){
+
+                    const newSim = cosinesim(emotion.embeddings[cont].embedding, photo_embedding);
+                    if(newSim>Number(process.env.COS_SIM_CONSTANT)){
+                        belongsToEmotion = true;
+                    }
+                    if(newSim>sim){
+                        sim = newSim;
+                    }
+                    cont++
+                }
+
+                queryAnswer.push({
+                    'name': emotion.name,
+                    '_id': emotion._id,
+                    'sim': sim,
+                    'belongsToEmotion': belongsToEmotion
+                })
+            });
+    
+            return res.status(200).json({
+                success: true,
+                data: queryAnswer
+            });
+
+        } catch (err) {
+
             return res.status(500).json({
                 success: false,
-                message: 'Server error: ' + err
+                message: 'Server error. Error: ' + err
             });
-        })
+        }
+        
     } else {
-        return res.status(500).json({
+        return res.status(403).json({
             success: false,
-            message: 'Please, select a video and emotions so we can compute the analysis...'
+            message: 'Please, select a photo and emotions so we can compute the analysis...'
         });
     }
 });
