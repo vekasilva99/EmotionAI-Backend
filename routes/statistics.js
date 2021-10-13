@@ -1126,6 +1126,7 @@ router.route('/emotions-in-photo').post(verifyToken, async(req, res) => {
                 let cont = 0;
                 let sim = 0;
 
+                console.log('emotion is ', emotion.name);
                 while(!belongsToEmotion && cont<emotion.embeddings.length){
 
                     const newSim = cosinesim(emotion.embeddings[cont].embedding, photo_embedding);
@@ -1135,6 +1136,7 @@ router.route('/emotions-in-photo').post(verifyToken, async(req, res) => {
                     if(newSim>sim){
                         sim = newSim;
                     }
+                    console.log('sim is', newSim);
                     cont++
                 }
 
