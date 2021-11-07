@@ -52,7 +52,7 @@ router.route('/').get(verifyToken, async (req, res) => {
   }else{
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     })
   }
   
@@ -82,7 +82,7 @@ router.route('/add').post((req, res) => {
       .then((data) => {
         return res.status(200).json({
           success: true,
-          message: `The embedding has been added.`
+          message: `El elemento ha sido añadido con éxito.`
         })
       })
       .catch(err => {
@@ -95,7 +95,7 @@ router.route('/add').post((req, res) => {
     }else{
       return res.status(404).json({
         success: false,
-        message: 'This emotion does not exist.'
+        message: 'La emoción no existe.'
       });
     }
   })
@@ -132,7 +132,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This embedding does not exist.'
+          message: 'Ese embedding no existe.'
         })
 
       }
@@ -148,7 +148,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     })
 
   }
@@ -172,14 +172,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Embedding deleted'
+          message: 'Elemento eliminado.'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This embedding does not exist'
+          message: 'Ese embedding no existe'
         });
       }
       
@@ -227,7 +227,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
           return res.status(200).json({
             success: true,
             data: data,
-            message: 'Embedding has been updated!'
+            message: '¡El elemento ha sido actualizado con éxito!'
           })
         })
         .catch(err => {
@@ -241,7 +241,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This embedding does not exist'
+          message: 'Ese embedding no existe'
         });
 
       }
@@ -258,7 +258,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }

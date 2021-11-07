@@ -45,7 +45,7 @@ router.get('/', verifyToken, async (req, res) => {
     } else{
       return res.status(404).json({
         success: false,
-        message: `No user nor company were found.`
+        message: `Ningún usuario o compañía fue encontrado.`
       });
     }
   } catch {

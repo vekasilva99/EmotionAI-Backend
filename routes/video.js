@@ -86,7 +86,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
         return res.status(400).json({
           success: false,
-          message: `There's already another video called like this one. Please, enter another name.`
+          message: `Ya existe otro video llamado como este. Por favor, elige otro nombre.`
         });
 
       } else {
@@ -114,7 +114,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
         .then((data) => {
           return res.status(200).json({
             success: true,
-            message: `The video has been successfully added.`
+            message: `El item ha sido añadido con éxito.`
           })
         })
         .catch(err => {
@@ -140,7 +140,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }
@@ -174,7 +174,7 @@ router.route('/:id').get((req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This item does not exist.'
+          message: 'Ese item no existe.'
         })
 
       }
@@ -213,14 +213,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Video deleted.'
+          message: 'Elemento eliminado.'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This video does not exist.'
+          message: 'Ese item no existe.'
         });
       }
       
@@ -273,7 +273,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
           return res.status(200).json({
             success: true,
             data: data,
-            message: 'Video has been updated!'
+            message: '¡El elemento ha sido actualizado con éxito!'
           })
         })
         .catch(err => {
@@ -287,7 +287,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This video does not exist.'
+          message: 'Ese item no existe.'
         });
 
       }
@@ -304,7 +304,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }

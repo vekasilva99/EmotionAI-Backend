@@ -23,7 +23,7 @@ router.post('/company', (req, res) => {
         if (!validPassword) {
             return res.status(404).json({
                 success: false,
-                message: 'The email or password you have provided is incorrect.'
+                message: 'El correo electrónico o la contraseña que introdujiste son incorrectos.'
             });
         } else {
             // Check if the company has been accepted.
@@ -45,19 +45,19 @@ router.post('/company', (req, res) => {
                             mainImg: company.mainImg,
                             _id:company._id
                         },
-                        message: 'Company successfully authenticated.'
+                        message: 'Compañía autenticada con éxito.'
                     });
 
                 }else{
                     return res.status(400).json({
                         success: false,
-                        message: 'This company has been inactivated by the admins. You no longer have access to our system. Check your email for more information.'
+                        message: 'Esta compañía ha sido inactivada por los administradores. Ya no tienes acceso a nuestro sistema. Revisa tu correo para mayor información.'
                     });
                 }
             }else{
                 return res.status(400).json({
                     success: false,
-                    message: 'This company has not been accepted by the admins yet. We will send you an email when this happens.'
+                    message: 'Esta compañía todavpia no ha sido aceptada por los administradores. Te enviaremos un correo electrónico cuando esto pase.'
                 });
             }
         }
@@ -65,7 +65,7 @@ router.post('/company', (req, res) => {
     }else{
         return res.status(404).json({
             success: false,
-            message: 'The email or password you have provided is incorrect.'
+            message: 'El correo electrónico o la contraseña que introdujiste son incorrectos.'
         })
     }
     })
@@ -85,7 +85,7 @@ router.post('/user', (req, res) => {
         email,
         password
     } = req.body
-console.log("LOG IN", req)
+
     User.findOne({email: email})
     .then( async user => {
 
@@ -97,7 +97,7 @@ console.log("LOG IN", req)
             if (!validPassword) {
                 return res.status(404).json({
                     success: false,
-                    message: 'The email or password you have provided is incorrect.'
+                    message: 'El correo electrónico o la contraseña que introdujiste son incorrectos.'
                 });
             } else {
                 // Check if the user is active.
@@ -119,13 +119,13 @@ console.log("LOG IN", req)
                             gender: user.gender,
                             isAdmin: user.isAdmin
                         },
-                        message: 'User successfully authenticated.'
+                        message: 'Usuario autenticado con éxito.'
                     });
 
                 }else{
                     return res.status(400).json({
                         success: false,
-                        message: 'This user has been inactivated by the admins. You no longer have access to our system. Check your email for more information.'
+                        message: 'Este usuario ha sido inactivado por los administradores. Ya no tienes acceso a nuestro sistema. Revisa tu correo para mayor información.'
                     });
                 }
         
@@ -135,7 +135,7 @@ console.log("LOG IN", req)
 
             return res.status(404).json({
                 success: false,
-                message: 'The email or password you have provided is incorrect.'
+                message: 'El correo electrónico o la contraseña que introdujiste son incorrectos.'
             })
 
         }

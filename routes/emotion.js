@@ -73,7 +73,7 @@ router.route('/').get(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }
@@ -99,7 +99,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
         return res.status(400).json({
           success: false,
-          message: `There's already another emotion called like this one. Please, enter another name.`
+          message: `Ya existe otra emoción con este mismo nombre. Por favor, elige otro nombre.`
         })
 
       } else {
@@ -120,7 +120,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
           .then((data) => {
             return res.status(200).json({
               success: true,
-              message: `The emotion has been successfully added.`,
+              message: `El item ha sido añadido con éxito.`,
               emotion: data
             })
           })
@@ -147,7 +147,7 @@ router.route('/add').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }
@@ -187,7 +187,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
 
           return res.status(404).json({
             success: false,
-            message: 'This item does not exist.'
+            message: 'Ese item no existe.'
           })
 
         }
@@ -236,7 +236,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     })
 
   }
@@ -261,14 +261,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Emotion deleted'
+          message: 'Elemento eliminado.'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This emotion does not exist'
+          message: 'Esa emoción no existe.'
         });
       }
       
@@ -312,7 +312,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
           return res.status(200).json({
             success: true,
             data: data,
-            message: 'Emotion has been updated!'
+            message: '¡El elemento ha sido actualizado con éxito!'
           })
         })
         .catch(err => {
@@ -326,7 +326,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This emotion does not exist.'
+          message: 'Esa emoción no existe.'
         });
 
       }
@@ -343,7 +343,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }

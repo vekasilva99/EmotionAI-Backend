@@ -67,7 +67,7 @@ router.post('/register', (req, res) => {
 
         return res.status(400).json({
           success: false,
-          message: 'This email already exists.'
+          message: 'Ya existe una compañía con este correo electrónico.'
         });
 
       } else {
@@ -88,7 +88,7 @@ router.post('/register', (req, res) => {
 
               return res.status(400).json({
                 success: false,
-                message: 'This company is already registered'
+                message: 'Esta compañía ya está registrada'
               });
         
             } else {
@@ -134,8 +134,8 @@ router.post('/register', (req, res) => {
                     let mailOptions = {
                       from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
                       to: process.env.MAIL_DIRECTION, // list of receivers
-                      subject: `New company has registered!`, // Subject line
-                      text: `Hey there! You have a request from a new company that want to join us!`, // plain text body
+                      subject: `¡Nueva compañía registrada!`, // Subject line
+                      text: `¡Hola! Tienes una nueva solicitud de una compañía que quiere unirse a nosotros...`, // plain text body
                       html: output, // html body
                     }
 
@@ -144,7 +144,7 @@ router.post('/register', (req, res) => {
 
                       return res.status(200).json({
                         success: true,
-                        message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                        message: `La compañía ha sido registrada exitosamente. Por favor, espera al correo electrónico de confirmación que te enviaremos una vez que la compañía haya sido aceptada.`,
                         data: {
                           _id: data._id,
                           email: data.email,
@@ -161,7 +161,7 @@ router.post('/register', (req, res) => {
                     .catch( err => {
                       return res.status(200).json({
                         success: true,
-                        message: `The company has been successfully registered. Please, wait for the confirmation email that we'll send you when your account has been activated.`,
+                        message: `La compañía ha sido registrada exitosamente. Por favor, espera al correo electrónico de confirmación que te enviaremos una vez que la compañía haya sido aceptada.`,
                         data: {
                           _id: data._id,
                           email: data.email,
@@ -172,7 +172,7 @@ router.post('/register', (req, res) => {
                           _id: data._id,
                         },
                         mailSent: false,
-                        mailMessage: 'An error ocurred when we tried to alert the admins about the new company registered. The error was: '+ err
+                        mailMessage: 'Un error ocurrió cuando se trató de notificar a los administradores sobre el nuevo registro. El error fue: '+ err
                       });
                     })
 
@@ -244,7 +244,7 @@ router.route('/register/:id/upload/image').post( (req, res) => {
               accepted: data.accepted,
               mainImg: data.mainImg,
             },
-            message: 'Company has been updated!'
+            message: '¡El elemento ha sido actualizado con éxito!'
           })
         })
         .catch(err => {
@@ -257,7 +257,7 @@ router.route('/register/:id/upload/image').post( (req, res) => {
       } else {
         return res.status(404).json({
           success: false,
-          message: `This company is not registered, so it can't be updated.`
+          message: `Esta compañía no se ha registrado y, por lo tanto, no puede ser actualizada.`
         });
         
       }
@@ -296,7 +296,7 @@ router.route('/:id').get((req, res) => {
 
       return res.status(404).json({
         success: false,
-        message: 'This company is not registered'
+        message: `Esta compañía no se ha registrado.`
       })
 
     }
@@ -330,14 +330,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Company deleted'
+          message: 'Elemento eliminado.'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This company is not registered'
+          message: `Esta compañía no se ha registrado.`
         });
       }
       
@@ -369,7 +369,7 @@ router.route('/update/:id').post( verifyToken, async (req, res) => {
           if(Boolean(companyEmail) && String(companyEmail._id)!==String(item._id)){
             return res.status(400).json({
               success: false,
-              message: 'There is already another company registered with that email.',
+              message: 'Ya existe otra compañía registrada con este correo electrónico.',
             })
           }
 
@@ -378,7 +378,7 @@ router.route('/update/:id').post( verifyToken, async (req, res) => {
           if(Boolean(companyName) && String(companyName._id)!==String(item._id)){
             return res.status(400).json({
               success: false,
-              message: 'There is already another company registered with that name.'
+              message: 'Ya existe otra compañía registrada con este nombre'
             })
           }
 
@@ -409,7 +409,7 @@ router.route('/update/:id').post( verifyToken, async (req, res) => {
                 accepted: data.accepted,
                 mainImg: data.mainImg,
               },
-              message: 'Company has been updated!'
+              message: '¡El elemento ha sido actualizado con éxito!'
             })
           })
           .catch(err => {
@@ -422,7 +422,7 @@ router.route('/update/:id').post( verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({
             success: false,
-            message: `This company is not registered, so it can't be updated.`
+            message: `Esta compañía no se ha registrado y, por lo tanto, no puede ser actualizada.`
           });
           
         }
@@ -438,7 +438,7 @@ router.route('/update/:id').post( verifyToken, async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     })
   }
 });
@@ -490,8 +490,8 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
             let mailOptions = {
               from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
-              subject: acceptedValue?`Your company has been accepted!`:`Your company has been rejected.`, // Subject line
-              text: acceptedValue?`Your company has been accepted!`:`We are extremely sorry, but your company has been rejected...`, // plain text body
+              subject: acceptedValue?`¡Tu compañía ha sido aceptada!`:`Tu compañía ha sido rechazada.`, // Subject line
+              text: acceptedValue?`Tenemos buenas noticias: ¡tu compañía ha sido aceptada!`:`Sentimos mucho anunciarte que tu compañía ha sido rechazada...`, // plain text body
               html: output, // html body
             }
 
@@ -506,7 +506,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
                   accepted: data.accepted,
                   mainImg: data.mainImg,
                 },
-                message: 'Company has been updated and the mail was sent!'
+                message: '¡La compañía ha sido actualizada y se ha enviado un correo electrónico!'
               });
             })
             .catch( err => {
@@ -519,7 +519,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
                   accepted: data.accepted,
                   mainImg: data.mainImg,
                 },
-                message: `Company has been updated and but there was an error sending the email. Please, contact this company and send them an email to let them know. The error was this one: ${err}`
+                message: `La compañía ha sido actualizada pero hubo un error enviándoles el correo electrónico. Por favor, escríbeles un correo y déjales saber su decisión. El error fue: ${err}`
               });
             })
 
@@ -536,7 +536,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({
             success: false,
-            message: `This company is not registered, so it can't be accepted/rejected.`
+            message: `Esta compañía no se ha registrado y, por lo tanto, no puede ser actualizada.`
           });
           
         }
@@ -553,7 +553,7 @@ router.route('/accept/:id/:accepted').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     })
 
   }
@@ -621,8 +621,8 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
             let mailOptions = {
               from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
-              subject: activeValue?`Your company is active now!`:`Your company has been inactivated.`, // Subject line
-              text: activeValue?`Your company is active now!`:`We are extremely sorry, but your company has been inactivated...`, // plain text body
+              subject: activeValue?`¡Tu compañía ha sido activada!`:`Tu compañía ha sido inactivada.`, // Subject line
+              text: activeValue?`Tenemos buenas noticias: ¡tu compañía ha sido activada!`:`Lamentamos mucho anunciarte que tu compañía ha sido inactivada`, // plain text body
               html: output, // html body
             }
 
@@ -637,7 +637,7 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
                   accepted: data.accepted,
                   mainImg: data.mainImg,
                 },
-                message: 'Company has been updated and the mail was sent!'
+                message: '¡La compañía ha sido actualizada y se ha enviado un correo electrónico!'
               });
             })
             .catch( err => {
@@ -650,7 +650,7 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
                   accepted: data.accepted,
                   mainImg: data.mainImg,
                 },
-                message: `Company has been updated and but there was an error sending the email!. Please, contact this company and send them an email to let them know. The error was this one: ${err}`
+                message: `La compañía ha sido actualizada pero hubo un error enviándoles el correo electrónico. Por favor, escríbeles un correo y déjales saber su decisión. El error fue: ${err}`
               });
             });
 
@@ -667,7 +667,7 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({
             success: false,
-            message: `This company is not registered, so it can't be activated/inactivated.`
+            message: `Esta compañía no se ha registrado y, por lo tanto, no puede ser actualizada.`
           });
           
         }
@@ -684,7 +684,7 @@ router.route('/active/:id/:active').post(verifyToken, async (req, res) => {
     } else {
       return res.status(401).json({
         success: false,
-        message: `You don't have authorization to perform this action.`
+        message: `No tienes autorización para realizar esta acción.`
       });
     }
 });
@@ -709,7 +709,7 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
     if(!validPassword){
       return res.status(404).json({
         success: false,
-        message: 'The old password is incorrect.'
+        message: 'La contraseña anterior es incorrecta.'
       });
     }else{
       // We proceed to update the password.
@@ -734,7 +734,7 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
       ).then( data => {
         return res.status(200).json({
           success: true,
-          message: `The password has been successfully updated.`
+          message: `La contraseña ha sido actualizada con éxito.`
         });
       })
       .catch( err => {
@@ -747,7 +747,7 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
   };
   
@@ -772,7 +772,7 @@ router.get('/info', verifyToken, (req, res) => {
     } else {
       return res.status(404).json({
         success: false,
-        message: `This company doesn't exist.`
+        message: 'Ese item no existe.'
       });
     };
   })

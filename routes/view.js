@@ -56,7 +56,7 @@ router.route('/').get(verifyToken, async (req, res) => {
 
       return res.status(401).json({
         success: false,
-        message: `You don't have authorization to perform this action.`
+        message: `No tienes autorización para realizar esta acción.`
       });
 
     }
@@ -96,7 +96,7 @@ router.route('/add').post((req, res) => {
   .then((data) => {
     return res.status(200).json({
       success: true,
-      message: `The view has been successfully added.`
+      message: `El item ha sido añadido con éxito.`
     })
   })
   .catch(err => {
@@ -118,7 +118,7 @@ router.route('/add-multiple').post((req, res) => {
   if(!Boolean(views) || (Boolean(views) && views.length==0)){
     return res.status(403).json({
       success: false,
-      message: 'You did not send any views to add.'
+      message: 'No se envió ningún item para añadir.'
     });
   } else {
 
@@ -163,7 +163,7 @@ router.route('/add-multiple').post((req, res) => {
       .then((data) => {
         return res.status(200).json({
           success: true,
-          message: `The views have been successfully added.`
+          message: `Los items han sido añadidos con éxito.`
         })
       })
       .catch(err => {
@@ -175,7 +175,7 @@ router.route('/add-multiple').post((req, res) => {
     }else{
       return res.status(403).json({
         success: false,
-        message: 'One or more of the required fields to create the views are missing. Each view needs information about its time, its video, its embedding, its attention, its age, its gender and its country. '
+        message: 'Uno o más de los campos requeridos para añadir el item falta. Cada item necesita información sobre su tiempo, video, embedding, atención, edad, género y país. '
       });
     }
   }
@@ -207,7 +207,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This view does not exist.'
+          message: 'Ese item no existe.'
         })
 
       }
@@ -222,7 +222,7 @@ router.route('/:id').get(verifyToken, async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
   };
 
@@ -246,14 +246,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'View deleted.'
+          message: 'Item eliminado'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This view does not exist.'
+          message: 'Ese item no existe.'
         });
       }
       
@@ -306,7 +306,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
           return res.status(200).json({
             success: true,
             data: data,
-            message: 'View has been updated!'
+            message: '¡El elemento ha sido actualizado con éxito!'
           })
         })
         .catch(err => {
@@ -320,7 +320,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
         return res.status(404).json({
           success: false,
-          message: 'This view does not exist.'
+          message: 'Ese item no existe.'
         });
 
       }
@@ -337,7 +337,7 @@ router.route('/update/:id').post(verifyToken, async (req, res) => {
 
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
 
   }

@@ -66,7 +66,7 @@ router.post('/register', (req, res) => {
 
         return res.status(400).json({
           success: false,
-          message: 'There is already a user registered with this email.'
+          message: 'Ya existe otro usuario registrado con este correo electrónico.'
         });
 
       } else {
@@ -114,7 +114,7 @@ router.post('/register', (req, res) => {
                     gender: data.gender,
                     isAdmin: data.isAdmin
                 },
-                message: 'User successfully authenticated.'
+                message: '¡Usuario exitosamente autenticado!.'
             });
 
           })
@@ -159,7 +159,7 @@ router.route('/:id').get((req, res) => {
 
       return res.status(404).json({
         success: false,
-        message: 'This user is not registered yet'
+        message: 'Este usuario aún no se ha registrado.'
       })
 
     }
@@ -193,14 +193,14 @@ router.route('/:id').delete((req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'The user has been deleted'
+          message: 'Elemento eliminado.'
         });
 
       } else {
 
         return res.status(404).json({
           success: false,
-          message: 'This user is not registered yet'
+          message: 'Este usuario aún no se ha registrado.'
         });
       }
       
@@ -236,9 +236,9 @@ router.route('/update/:id').post( verifyToken,  async (req, res) => {
           // Check if there are other user with that email (apart from itself)
           const UserEmail = await User.findOne({email: email});
           if(Boolean(UserEmail) && String(UserEmail._id)!==String(item._id)){
-            return res.status(400).json({
+            return res.status(403).json({
               success: false,
-              message: 'There is already another user registered with that email.',
+              message: 'Ya existe otro usuario registrado con este correo electrónico.',
             })
           }
 
@@ -271,7 +271,7 @@ router.route('/update/:id').post( verifyToken,  async (req, res) => {
                 gender: data.gender,
                 birthdate: data.birthdate
               },
-              message: 'User has been updated!'
+              message: '¡El elemento ha sido actualizado con éxito!'
             })
           })
           .catch(err => {
@@ -284,7 +284,7 @@ router.route('/update/:id').post( verifyToken,  async (req, res) => {
         } else {
           return res.status(404).json({
             success: false,
-            message: `This user is not registered yet, so it can't be updated.`
+            message: `Este usuario aún no se ha registrado, por lo que no puede ser actualizado.`
           });
           
         }
@@ -300,7 +300,7 @@ router.route('/update/:id').post( verifyToken,  async (req, res) => {
     } else {
       return res.status(401).json({
         success: false,
-        message: `You don't have authorization to perform this action.`
+        message: `No tienes autorización para realizar esta acción.`
       })
     }
 });
@@ -354,8 +354,8 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
             let mailOptions = {
               from: `${process.env.MAIL_TEAM} <${process.env.MAIL_DIRECTION}>`, // sender address
               to: data.email, // list of receivers
-              subject: activeValue?`You have been activated!`:`You have been inactivated.`, // Subject line
-              text: activeValue?`You have been activated!`:`We are extremely sorry, but you have been inactivated...`, // plain text body
+              subject: activeValue?`¡Tu cuenta ha sido activada!`:`Tu cuenta ha sido inactivada.`, // Subject line
+              text: activeValue?`Tenemos buenas noticias: ¡tu cuenta ha sido activada!`:`Lamentamos mucho informarte que tu cuenta ha sido inactivada...`, // plain text body
               html: output, // html body
             }
 
@@ -372,7 +372,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
                   gender: data.gender,
                   birthdate: data.birthdate
                 },
-                message: 'User has been updated and the mail was sent!'
+                message: '¡El usuario ha sido actualizado y se le ha enviado un correo electrónico!'
               });
             })
             .catch( err => {
@@ -387,7 +387,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
                   gender: data.gender,
                   birthdate: data.birthdate
                 },
-                message: `User has been updated and but there was an error sending the email!. Please, contact this user and send them an email to let him/her know. The error was this one: ${err}`
+                message: `El usuario ha sido actualizado pero hubo un error enviándole el correo electrónico. Por favor, escríbele un correo y déjales saber tu decisión. El error fue: ${err}`
               });
             });
 
@@ -402,7 +402,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
         } else {
           return res.status(404).json({
             success: false,
-            message: `This user is not registered yet, so it can not be activated/inactivated`
+            message: `Este usuario aún no se ha registrado, por lo que no puede ser activado/desactivado.`
           });
           
         }
@@ -419,7 +419,7 @@ router.route('/active/:id/:active').post( verifyToken, async (req, res) => {
 
       return res.status(401).json({
         success: false,
-        message: `You don't have authorization to perform this action.`
+        message: `No tienes autorización para realizar esta acción.`
       })
 
     }
@@ -443,9 +443,9 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
     // Validate password
     const validPassword = await bcrypt.compare(old_password, user.password);
     if(!validPassword){
-      return res.status(404).json({
+      return res.status(403).json({
         success: false,
-        message: 'The old password is incorrect.'
+        message: 'La contraseña anterior es incorrecta.'
       });
     }else{
       // We proceed to update the password.
@@ -472,7 +472,7 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
       ).then( data => {
         return res.status(200).json({
           success: true,
-          message: `The password has been successfully updated.`
+          message: `La contraseña ha sido actualizada con éxito.`
         });
       })
       .catch( err => {
@@ -485,7 +485,7 @@ router.post('/changepassword/:id', verifyToken, async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: `You don't have authorization to perform this action.`
+      message: `No tienes autorización para realizar esta acción.`
     });
   };
   
@@ -512,7 +512,7 @@ router.get('/info', verifyToken, (req, res) => {
     } else {
       return res.status(404).json({
         success: false,
-        message: `This user doesn't exist.`
+        message: 'Ese item no existe.'
       });
     };
   })

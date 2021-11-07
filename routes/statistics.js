@@ -137,7 +137,7 @@ router.route('/emotions-in-video').post(verifyToken, async(req, res) => {
                         })
                         return res.status(403).json({
                             success: false,
-                            message: `This/these emotion/s is/are inactive: ${text}. You can not select any inactive amotions.`,
+                            message: `Esta/s emoción/es están inactivas: ${text}. No se puede seleccionar ninguna emoción inactiva.`,
                         });
             
                     }
@@ -145,7 +145,7 @@ router.route('/emotions-in-video').post(verifyToken, async(req, res) => {
                 } else {
                 return res.status(404).json({
                     success: false,
-                    message: `One (or more) of the emotions you selected does not exist. Please, select at least one of them (it has to be an active one).`,
+                    message: `Una o más emociones de las que seleccionaste no existen. Por favor, selecciona al menos una que exista y esté activa.`,
                 });
                 }
         
@@ -165,7 +165,7 @@ router.route('/emotions-in-video').post(verifyToken, async(req, res) => {
     } else {
         return res.status(500).json({
             success: false,
-            message: 'Please, select a video and emotions so we can compute the analysis...'
+            message: 'Por favor, selecciona un video y emociones para poder realizar el análisis...'
         });
     }
 });
@@ -218,9 +218,9 @@ router.route('/country/:videoID').get(verifyToken, async(req, res) => {
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.`
                 });
             }
 
@@ -228,7 +228,7 @@ router.route('/country/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -290,9 +290,9 @@ router.route('/gender/:videoID').get(verifyToken, async(req, res) => {
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.`
                 });
             }
 
@@ -300,7 +300,7 @@ router.route('/gender/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -375,9 +375,9 @@ router.route('/age/:videoID').get(verifyToken, async(req, res) => {
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.`
                 });
             }
 
@@ -385,7 +385,7 @@ router.route('/age/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -447,9 +447,9 @@ router.route('/top-results/country/:videoID').get(verifyToken, async(req, res) =
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.`
                 });
             }
 
@@ -457,7 +457,7 @@ router.route('/top-results/country/:videoID').get(verifyToken, async(req, res) =
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -532,9 +532,9 @@ router.route('/top-results/age/:videoID').get(verifyToken, async(req, res) => {
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.` 
                 });
             }
 
@@ -542,7 +542,7 @@ router.route('/top-results/age/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -604,9 +604,9 @@ router.route('/top-results/gender/:videoID').get(verifyToken, async(req, res) =>
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.` 
                 });
             }
 
@@ -614,7 +614,7 @@ router.route('/top-results/gender/:videoID').get(verifyToken, async(req, res) =>
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -663,9 +663,9 @@ router.route('/total-views/:videoID').get(verifyToken, async(req, res) => {
                 })
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.` 
                 });
             }
 
@@ -673,7 +673,7 @@ router.route('/total-views/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -777,9 +777,9 @@ router.route('/attention-in-video/:videoID').get(verifyToken, async(req, res) =>
                 });
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.`
                 });
             }
 
@@ -787,7 +787,7 @@ router.route('/attention-in-video/:videoID').get(verifyToken, async(req, res) =>
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -887,7 +887,7 @@ router.route('/paying-attention/:videoID').get(verifyToken, async(req, res) => {
                         data: {
                             value: value,
                             unit: '%',
-                            message: 'are paying attention'
+                            message: 'están prestando atención'
                         } 
                     });
 
@@ -895,17 +895,17 @@ router.route('/paying-attention/:videoID').get(verifyToken, async(req, res) => {
                     return res.status(200).json({
                         success: true,
                         data: {
-                            value: 'Nobody',
-                            unit: '%',
-                            message: 'is paying attention'
+                            value: 'Nadie',
+                            unit: '',
+                            message: 'está prestando atención'
                         } 
                     });
                 }
 
             } else {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    message: `You don't have authorization to perform this action.` 
+                    message: `No tienes autorización para realizar esta acción.` 
                 });
             }
 
@@ -913,7 +913,7 @@ router.route('/paying-attention/:videoID').get(verifyToken, async(req, res) => {
 
             return res.status(404).json({
                 success: false,
-                message: 'The video you selected does not exist or it is inactive. Please, select one that exists and it is active.'
+                message: 'El video que seleccionaste no existe o está inactivo. Por favor, selecciona uno que exista y que esté activo.'
             });
         }
 
@@ -1051,7 +1051,7 @@ router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
                         })
                         return res.status(403).json({
                             success: false,
-                            message: `This/these emotion/s is/are inactive: ${text}. You can not select any inactive amotions.`,
+                            message: `Esta/s emoción/es están inactivas: ${text}. No se puede seleccionar ninguna emoción inactiva.`,
                         });
             
                     }
@@ -1059,7 +1059,7 @@ router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
                 } else {
                     return res.status(404).json({
                         success: false,
-                        message: `One (or more) of the emotions you selected does not exist. Please, select at least one of them (it has to be an active one).`,
+                        message: `Una o más emociones de las que seleccionaste no existen. Por favor, selecciona al menos una que exista y esté activa.`,
                     });
                 }
         
@@ -1079,7 +1079,7 @@ router.route('/predominant-emotion').post(verifyToken, async(req, res) => {
     } else {
         return res.status(500).json({
             success: false,
-            message: 'Please, select a video and emotions so we can compute the analysis...'
+            message: 'Por favor, selecciona un video y emociones para poder realizar el análisis...'
         });
     }
 });
@@ -1164,7 +1164,7 @@ router.route('/emotions-in-photo').post(verifyToken, async(req, res) => {
     } else {
         return res.status(403).json({
             success: false,
-            message: 'Please, select a photo and emotions so we can compute the analysis...'
+            message: 'Por favor, selecciona una foto y emociones para poder realizar el análisis...'
         });
     }
 });
