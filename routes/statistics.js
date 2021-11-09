@@ -342,11 +342,11 @@ router.route('/age/:videoID').get(verifyToken, async(req, res) => {
                         $project: {    
                             "ageRange": {
                                 $concat: [
-                                    { $cond: [{$lt: ["$age",0]}, "Unknown", ""]}, 
-                                    { $cond: [{$and:[ {$gte:["$age", 0 ]}, {$lt: ["$age", 12]}]}, "Kids", ""] },
-                                    { $cond: [{$and:[ {$gte:["$age",12]}, {$lte:["$age", 21]}]}, "Teenagers", ""]},
-                                    { $cond: [{$and:[ {$gt:["$age",21]}, {$lt:["$age", 60]}]}, "Adults", ""]},
-                                    { $cond: [{$gte:["$age",60]}, "Elderly", ""]}
+                                    { $cond: [{$lt: ["$age",0]}, "Desconocido", ""]}, 
+                                    { $cond: [{$and:[ {$gte:["$age", 0 ]}, {$lt: ["$age", 12]}]}, "Niños", ""] },
+                                    { $cond: [{$and:[ {$gte:["$age",12]}, {$lte:["$age", 21]}]}, "Adolescentes", ""]},
+                                    { $cond: [{$and:[ {$gt:["$age",21]}, {$lt:["$age", 60]}]}, "Adultos", ""]},
+                                    { $cond: [{$gte:["$age",60]}, "3era Edad", ""]}
                                 ]
                             }  
                         }    
@@ -498,11 +498,11 @@ router.route('/top-results/age/:videoID').get(verifyToken, async(req, res) => {
                         $project: {    
                             "ageRange": {
                                 $concat: [
-                                    { $cond: [{$lt: ["$age",0]}, "Unknown", ""]}, 
-                                    { $cond: [{$and:[ {$gte:["$age", 0 ]}, {$lt: ["$age", 12]}]}, "Kids", ""] },
-                                    { $cond: [{$and:[ {$gte:["$age",12]}, {$lte:["$age", 21]}]}, "Teenagers", ""]},
-                                    { $cond: [{$and:[ {$gt:["$age",21]}, {$lt:["$age", 60]}]}, "Adults", ""]},
-                                    { $cond: [{$gte:["$age",60]}, "Elderly", ""]}
+                                    { $cond: [{$lt: ["$age",0]}, "Desconocido", ""]}, 
+                                    { $cond: [{$and:[ {$gte:["$age", 0 ]}, {$lt: ["$age", 12]}]}, "Niños", ""] },
+                                    { $cond: [{$and:[ {$gte:["$age",12]}, {$lte:["$age", 21]}]}, "Adolescentes", ""]},
+                                    { $cond: [{$and:[ {$gt:["$age",21]}, {$lt:["$age", 60]}]}, "Adultos", ""]},
+                                    { $cond: [{$gte:["$age",60]}, "3era edad", ""]}
                                 ]
                             }  
                         }    
